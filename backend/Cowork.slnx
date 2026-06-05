@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Cowork.Api/Cowork.Api.csproj" />
+    <Project Path="src/Cowork.Application/Cowork.Application.csproj" />
+    <Project Path="src/Cowork.Domain/Cowork.Domain.csproj" />
+    <Project Path="src/Cowork.Infrastructure/Cowork.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Cowork.IntegrationTests/Cowork.IntegrationTests.csproj" />
+    <Project Path="tests/Cowork.UnitTests/Cowork.UnitTests.csproj" />
+  </Folder>
+</Solution>
