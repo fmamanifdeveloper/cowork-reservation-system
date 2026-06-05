@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: cowork-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cowork_reservations
+      POSTGRES_USER: cowork_user
+      POSTGRES_PASSWORD: cowork_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - cowork_postgres_data:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d
+
+volumes:
+  cowork_postgres_data:
