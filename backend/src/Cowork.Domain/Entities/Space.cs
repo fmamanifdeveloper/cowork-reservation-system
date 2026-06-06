@@ -63,4 +63,32 @@ public sealed class Space
     {
         Status = SpaceStatus.Active;
     }
+
+    public void Update(
+    string name,
+    int capacity,
+    decimal baseHourlyRate,
+    TimeOnly openingTime,
+    TimeOnly closingTime,
+    SpaceStatus status)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Space name is required.", nameof(name));
+
+        if (capacity <= 0)
+            throw new ArgumentException("Capacity must be greater than zero.", nameof(capacity));
+
+        if (baseHourlyRate <= 0)
+            throw new ArgumentException("Base hourly rate must be greater than zero.", nameof(baseHourlyRate));
+
+        if (openingTime >= closingTime)
+            throw new ArgumentException("Opening time must be earlier than closing time.");
+
+        Name = name.Trim();
+        Capacity = capacity;
+        BaseHourlyRate = baseHourlyRate;
+        OpeningTime = openingTime;
+        ClosingTime = closingTime;
+        Status = status;
+    }
 }
