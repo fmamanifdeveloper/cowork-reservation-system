@@ -1,4 +1,5 @@
-﻿using Cowork.Application.Common.Exceptions;
+﻿using Cowork.Application.Cancellations;
+using Cowork.Application.Common.Exceptions;
 using Cowork.Application.Common.Interfaces;
 using Cowork.Application.Pricing;
 using Cowork.Domain.Entities;
@@ -11,17 +12,20 @@ public sealed class ReservationService
     private readonly IReservationRepository _reservationRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly DynamicPricingCalculator _pricingCalculator;
+    private readonly CancellationPolicyService _cancellationPolicyService;
 
     public ReservationService(
         ISpaceRepository spaceRepository,
         IReservationRepository reservationRepository,
         IUnitOfWork unitOfWork,
-        DynamicPricingCalculator pricingCalculator)
+        DynamicPricingCalculator pricingCalculator,
+        CancellationPolicyService cancellationPolicyService)
     {
         _spaceRepository = spaceRepository;
         _reservationRepository = reservationRepository;
         _unitOfWork = unitOfWork;
         _pricingCalculator = pricingCalculator;
+        _cancellationPolicyService = cancellationPolicyService;
     }
 
     public async Task<IReadOnlyList<ReservationDto>> ListAsync(CancellationToken cancellationToken)
@@ -94,6 +98,29 @@ public sealed class ReservationService
             reservation.BaseAmount,
             reservation.FinalAmount,
             reservation.RefundAmount,
-            reservation.CreatedAt);
+            reservation.CreatedAt,
+            reservation.CancelledAt,
+            reservation.CompletedAt);
+    }
+
+    public async Task<ReservationDto> CancelAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var reservation = await _reservationRepository.GetByIdAsync(id, cancellationToken);
+
+        if (reservation is null)
+            throw new NotFoundException("Reservation was not found.");
+
+        var cancellationRequestedAt = DateTimeOffset.UtcNow;
+
+        var refund = _cancellationPolicyService.CalculateRefund(
+            reservation.StartTime,
+            cancellationRequestedAt,
+            reservation.FinalAmount);
+
+        reservation.Cancel(refund.RefundAmount, cancellationRequestedAt);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return ToDto(reservation);
     }
 }

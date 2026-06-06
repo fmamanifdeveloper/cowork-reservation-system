@@ -29,4 +29,13 @@ public sealed class ReservationsController : ControllerBase
         var result = await _reservationService.CreateAsync(request, cancellationToken);
         return StatusCode(StatusCodes.Status201Created, result);
     }
+
+    [HttpPost("{id:guid}/cancel")]
+    public async Task<ActionResult<ReservationDto>> Cancel(
+    Guid id,
+    CancellationToken cancellationToken)
+    {
+        var result = await _reservationService.CancelAsync(id, cancellationToken);
+        return Ok(result);
+    }
 }

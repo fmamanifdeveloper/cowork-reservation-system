@@ -22,6 +22,24 @@ public sealed class ReservationRepository : IReservationRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Reservation?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Reservations
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Reservation>> ListByRangeAsync(
+        DateTimeOffset from,
+        DateTimeOffset to,
+        CancellationToken cancellationToken)
+    {
+        return await _dbContext.Reservations
+            .AsNoTracking()
+            .Where(x => x.StartTime < to && x.EndTime > from)
+            .OrderBy(x => x.StartTime)
+            .ToListAsync(cancellationToken);
+    }
+
     public void Add(Reservation reservation)
     {
         _dbContext.Reservations.Add(reservation);

@@ -1,5 +1,6 @@
 ﻿using Cowork.Application.Cancellations;
 using Cowork.Application.Pricing;
+using Cowork.Application.Reports;
 using Cowork.Application.Reservations;
 using Cowork.Application.Spaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<SpaceService>();
         services.AddScoped<PricingPreviewService>();
         services.AddScoped<ReservationService>();
+        services.AddScoped<ReportsService>();
 
         return services;
     }

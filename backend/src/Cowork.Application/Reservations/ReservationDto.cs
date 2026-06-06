@@ -11,4 +11,6 @@ public sealed record ReservationDto(
     decimal BaseAmount,
     decimal FinalAmount,
     decimal? RefundAmount,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? CancelledAt,
+    DateTimeOffset? CompletedAt);
