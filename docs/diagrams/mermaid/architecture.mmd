@@ -1,0 +1,18 @@
+flowchart LR
+    Client[Cliente / Usuario público] --> Angular[Angular Web App]
+    Admin[Administrador interno] --> Angular
+
+    Angular --> Api[ASP.NET Core Web API]
+
+    Api --> Auth[JWT Authentication]
+    Api --> ReservationService[Reservation Service]
+    Api --> PricingService[Dynamic Pricing Service]
+    Api --> ReportService[Reports Service]
+
+    ReservationService --> PostgreSQL[(PostgreSQL)]
+    PricingService --> PostgreSQL
+    ReportService --> PostgreSQL
+
+    PostgreSQL --> Constraint[Exclusion Constraint<br/>Anti-overbooking]
+
+    Api --> OpenAPI[OpenAPI / Scalar]

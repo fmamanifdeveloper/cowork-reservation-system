@@ -1,0 +1,9 @@
+flowchart TD
+    A[Cliente consulta espacios] --> B[Selecciona espacio]
+    B --> C[Ingresa datos personales y horario]
+    C --> D[Solicita vista previa de precio]
+    D --> E[API calcula precio final]
+    E --> F[Cliente confirma reserva]
+    F --> G{¿Horario disponible?}
+    G -->|Sí| H[Reserva confirmada]
+    G -->|No| I[Mostrar horario no disponible]

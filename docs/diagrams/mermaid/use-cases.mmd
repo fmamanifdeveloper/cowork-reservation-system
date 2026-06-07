@@ -1,0 +1,13 @@
+flowchart LR
+    Client((Cliente))
+    Admin((Administrador))
+
+    Client --> UC1[Consultar espacios]
+    Client --> UC2[Calcular precio]
+    Client --> UC3[Crear reserva]
+
+    Admin --> UC4[Iniciar sesión]
+    Admin --> UC5[Gestionar espacios]
+    Admin --> UC6[Ver reservas]
+    Admin --> UC7[Cancelar reservas]
+    Admin --> UC8[Consultar reportes]
