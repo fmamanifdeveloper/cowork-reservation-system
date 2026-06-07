@@ -1,0 +1,52 @@
+<section class="page">
+    <div class="page-header">
+        <div>
+            <h2>Espacios</h2>
+            <p>Consulta las salas disponibles, su capacidad, tarifa y horario de atención.</p>
+        </div>
+
+        <button type="button" (click)="loadSpaces()">Actualizar</button>
+    </div>
+
+    @if (loading()) {
+    <div class="state">Cargando espacios...</div>
+    }
+
+    @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+    }
+
+    @if (!loading() && !error()) {
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Capacidad</th>
+                    <th>Tarifa por hora</th>
+                    <th>Horario</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @for (space of spaces(); track space.id) {
+                <tr>
+                    <td>
+                        <strong>{{ space.name }}</strong>
+                    </td>
+                    <td>{{ space.capacity }} personas</td>
+                    <td>S/ {{ space.baseHourlyRate | number:'1.2-2' }}</td>
+                    <td>{{ space.openingTime }} - {{ space.closingTime }}</td>
+                    <td>
+                        <span class="badge" [class.maintenance]="space.status === 'Maintenance'">
+                            {{ getStatusLabel(space.status) }}
+                        </span>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    }
+</section>

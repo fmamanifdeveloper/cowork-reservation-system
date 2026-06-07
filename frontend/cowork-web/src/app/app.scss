@@ -1,0 +1,79 @@
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    padding: 22px 40px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #111827;
+    color: #ffffff;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.brand-mark {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #111827;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+h1 {
+    margin: 0;
+    font-size: 25px;
+    letter-spacing: -0.03em;
+}
+
+p {
+    margin: 4px 0 0;
+    color: #d1d5db;
+    font-size: 14px;
+}
+
+nav {
+    display: flex;
+    gap: 10px;
+}
+
+a {
+    color: #d1d5db;
+    text-decoration: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+a.active,
+a:hover {
+    background: #ffffff;
+    color: #111827;
+}
+
+.app-main {
+    padding: 32px 40px;
+}
+
+@media (max-width: 820px) {
+    .app-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    nav {
+        flex-wrap: wrap;
+    }
+
+    .app-main {
+        padding: 24px 18px;
+    }
+}
