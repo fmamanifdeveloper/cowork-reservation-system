@@ -2,7 +2,7 @@
 
 Sistema full stack para la gestión de reservas de espacios de coworking.
 
-El proyecto permite consultar espacios disponibles, registrar reservas públicas, calcular precios dinámicos, administrar espacios, clientes y reservas, controlar accesos por rol, generar reportes administrativos y auditar eventos funcionales del sistema.
+El proyecto permite consultar espacios disponibles, visualizar disponibilidad por fecha, registrar reservas públicas, calcular precios dinámicos antes de confirmar, administrar espacios, clientes y reservas, generar reportes administrativos, validar concurrencia para evitar doble reserva y auditar eventos funcionales del sistema.
 
 ---
 
@@ -16,12 +16,20 @@ El proyecto permite consultar espacios disponibles, registrar reservas públicas
 - [Ejecución local](#ejecución-local)
 - [Usuarios demo](#usuarios-demo)
 - [Rutas principales](#rutas-principales)
+- [Flujo público de reserva](#flujo-público-de-reserva)
 - [Endpoints principales](#endpoints-principales)
 - [Base de datos](#base-de-datos)
 - [Reglas de negocio](#reglas-de-negocio)
+- [Disponibilidad por espacio](#disponibilidad-por-espacio)
+- [Tarifas dinámicas](#tarifas-dinámicas)
+- [Política de cancelación](#política-de-cancelación)
+- [Prevención de overbooking y concurrencia](#prevención-de-overbooking-y-concurrencia)
+- [Índices para disponibilidad](#índices-para-disponibilidad)
+- [Reportes](#reportes)
+- [Auditoría](#auditoría)
 - [Pruebas](#pruebas)
 - [Colección manual de requests](#colección-manual-de-requests)
-- [Documentación adicional](#documentación-adicional)
+- [Validación final](#validación-final)
 - [Mejoras futuras](#mejoras-futuras)
 
 ---
@@ -32,10 +40,14 @@ El proyecto permite consultar espacios disponibles, registrar reservas públicas
 
 - Visualización de espacios disponibles.
 - Selección de espacio por capacidad, tarifa y horario.
+- Consulta de disponibilidad por espacio y fecha.
+- Visualización de bloques libres y ocupados en intervalos de 30 minutos.
+- Selección de hora de inicio desde bloques disponibles.
+- Selección de duración válida sin cruzar horarios ocupados.
+- Cálculo automático del precio antes de confirmar.
 - Registro de reserva pública tipo invitado.
-- Cálculo previo del precio antes de confirmar.
 - Confirmación visual con código de reserva.
-- Indicaciones claras para el cliente después de reservar.
+- Feedback claro para el cliente después de reservar.
 
 ### Panel interno
 
@@ -45,6 +57,7 @@ El proyecto permite consultar espacios disponibles, registrar reservas públicas
 - Gestión de espacios.
 - Gestión de clientes.
 - Gestión de reservas.
+- Creación de reservas internas con preview de precio.
 - Cancelación de reservas.
 - Finalización de reservas.
 - Reportes administrativos.
@@ -55,8 +68,9 @@ El proyecto permite consultar espacios disponibles, registrar reservas públicas
 - Autenticación JWT.
 - Roles `Admin`, `Staff` y `Customer`.
 - Guards en frontend.
-- Interceptor para enviar token JWT.
+- Interceptor HTTP para enviar token JWT.
 - Validación de horarios en bloques de 30 minutos.
+- Validación de disponibilidad antes de crear reservas.
 - Prevención de reservas solapadas.
 - Manejo de errores HTTP.
 - Auditoría de acciones relevantes.
@@ -85,6 +99,7 @@ El proyecto permite consultar espacios disponibles, registrar reservas públicas
 - Angular Signals
 - HTTP Interceptors
 - Route Guards
+- Formularios con `ngModel`
 
 ### Base de datos
 
@@ -95,6 +110,7 @@ El proyecto permite consultar espacios disponibles, registrar reservas públicas
 - Seeds
 - Comentarios técnicos
 - Auditoría en tabla `audit_logs`
+- Restricción contra reservas solapadas
 
 ---
 
@@ -139,11 +155,11 @@ cowork-reservation-system/
 
 ## Arquitectura general
 
-El proyecto está separado en backend, frontend, base de datos y documentación.
+El proyecto está dividido en backend, frontend, base de datos y documentación.
 
 ### Backend
 
-El backend usa una arquitectura por capas:
+El backend utiliza una arquitectura por capas:
 
 ```text
 Cowork.Api
@@ -162,6 +178,7 @@ Contiene:
 - Middleware global de errores.
 - Configuración de OpenAPI/Scalar.
 - Servicio de usuario actual.
+- Endpoints públicos y protegidos.
 
 ### `Cowork.Application`
 
@@ -174,6 +191,7 @@ Contiene:
 - Reglas coordinadas de negocio.
 - Cálculo de precios.
 - Política de cancelación.
+- Disponibilidad pública por slots.
 - Auditoría funcional.
 - Reportes.
 
@@ -212,7 +230,9 @@ Para ejecutar el proyecto localmente se requiere:
 
 Opcional:
 
-- Visual Studio 2026, Visual Studio Code o Rider.
+- Visual Studio.
+- Visual Studio Code.
+- Rider.
 - Extensión REST Client para probar `docs/requests/requests.http`.
 
 ---
@@ -242,7 +262,14 @@ Esto crea el contenedor PostgreSQL y ejecuta automáticamente los scripts ubicad
 database/
 ```
 
-La base de datos queda inicializada con catálogos, usuarios demo, clientes demo, espacios demo y datos necesarios para la ejecución local.
+La base de datos queda inicializada con:
+
+- Catálogos.
+- Usuarios demo.
+- Clientes demo.
+- Espacios demo.
+- Reservas demo.
+- Datos necesarios para la ejecución local.
 
 ---
 
@@ -386,17 +413,21 @@ Las credenciales demo son solo para entorno local de desarrollo.
 
 ## Flujo público de reserva
 
-El portal público permite crear reservas como invitado.
+El portal público permite crear reservas como invitado, sin crear una cuenta previamente.
 
-Flujo:
+Flujo implementado:
 
 ```text
 1. El cliente selecciona un espacio.
-2. Ingresa sus datos de contacto.
-3. Define inicio y fin de la reserva.
-4. Calcula el precio estimado.
-5. Confirma la reserva.
-6. El sistema muestra un código de reserva.
+2. Selecciona una fecha.
+3. El sistema consulta la disponibilidad del espacio para ese día.
+4. El cliente visualiza bloques libres y ocupados en intervalos de 30 minutos.
+5. El cliente selecciona una hora de inicio disponible.
+6. El sistema muestra duraciones válidas según los bloques libres consecutivos.
+7. El cliente selecciona la duración.
+8. El sistema calcula automáticamente el precio estimado.
+9. El cliente confirma la reserva.
+10. El sistema muestra el código de reserva.
 ```
 
 Después de crear la reserva, el cliente debe guardar su código. Ese código permite que el personal ubique la reserva desde el panel interno.
@@ -418,6 +449,7 @@ GET  /api/auth/me
 
 ```http
 GET  /api/public/spaces
+GET  /api/public/spaces/{spaceId}/availability?date=2026-06-08
 POST /api/public/pricing/preview
 POST /api/public/reservations
 ```
@@ -482,7 +514,7 @@ Archivos principales:
 | `000_extensions.sql` | Extensiones y funciones compartidas |
 | `001_catalogs.sql` | Catálogos base |
 | `002_schema.sql` | Tablas principales |
-| `003_indexes_constraints.sql` | Índices, constraints y triggers |
+| `003_indexes_constraints.sql` | Índices, constraints y restricciones |
 | `004_seed.sql` | Datos iniciales y usuarios demo |
 | `005_comments.sql` | Comentarios técnicos de base de datos |
 
@@ -525,6 +557,8 @@ Catálogos principales:
 - Los horarios deben usar bloques de 30 minutos.
 - No se permiten reservas solapadas para el mismo espacio.
 - No se pueden reservar espacios inactivos o en mantenimiento.
+- Las reservas canceladas no bloquean disponibilidad.
+- La disponibilidad mostrada en frontend se vuelve a validar en backend antes de crear la reserva.
 
 ### Espacios
 
@@ -535,7 +569,111 @@ Catálogos principales:
 - Los horarios de apertura y cierre deben usar bloques de 30 minutos.
 - La zona horaria es obligatoria.
 
-### Cancelaciones
+### Clientes
+
+- El nombre completo es obligatorio.
+- El correo debe tener formato válido.
+- El teléfono debe cumplir longitud mínima.
+- Los datos del cliente permiten registrar reservas públicas tipo invitado.
+
+---
+
+## Disponibilidad por espacio
+
+El sistema incluye un endpoint público de disponibilidad:
+
+```http
+GET /api/public/spaces/{spaceId}/availability?date=2026-06-08
+```
+
+Este endpoint:
+
+- Recibe el espacio y la fecha.
+- Obtiene el horario de apertura y cierre del espacio.
+- Genera bloques de 30 minutos.
+- Consulta reservas existentes del espacio en ese día.
+- Marca cada bloque como disponible u ocupado.
+- Ignora reservas canceladas.
+- Devuelve la lista de bloques al frontend.
+
+Respuesta esperada:
+
+```json
+{
+  "spaceId": "00000000-0000-0000-0000-000000000001",
+  "spaceName": "Oficina Privada",
+  "date": "2026-06-08",
+  "openingTime": "08:00:00",
+  "closingTime": "18:00:00",
+  "timeZoneId": "America/Lima",
+  "slots": [
+    {
+      "startTime": "08:00:00",
+      "endTime": "08:30:00",
+      "isAvailable": true
+    },
+    {
+      "startTime": "08:30:00",
+      "endTime": "09:00:00",
+      "isAvailable": false
+    }
+  ],
+  "reservedSlots": [
+    {
+      "startTime": "08:30:00",
+      "endTime": "09:00:00"
+    }
+  ]
+}
+```
+
+En el frontend, el cliente no escribe manualmente la hora de inicio y fin. Selecciona un bloque libre y luego una duración válida. El sistema calcula internamente `startTime` y `endTime`.
+
+---
+
+## Tarifas dinámicas
+
+El motor de tarifas calcula el precio de la reserva antes de confirmar.
+
+El flujo de cálculo es:
+
+```text
+Precio base = tarifa por hora × duración
+```
+
+Luego aplica reglas en orden:
+
+```text
+1. Recargo por hora pico
+2. Recargo por fin de semana
+3. Descuento por reserva larga
+4. Descuento por reserva anticipada
+```
+
+### Reglas aplicadas
+
+| Regla | Condición | Ajuste |
+|---|---|---:|
+| Hora pico | Reserva cruza 09:00-11:00 o 17:00-19:00 | +25% |
+| Fin de semana | Reserva inicia sábado o domingo | +15% |
+| Reserva larga | Duración mayor o igual a 4 horas | -10% |
+| Reserva anticipada | Reserva creada al menos 7 días antes | -5% |
+
+El resultado se almacena en la reserva mediante `pricing_breakdown`, permitiendo trazabilidad del cálculo aplicado.
+
+Ejemplo:
+
+```text
+Tarifa por hora: S/ 50
+Duración: 1 h 30 min
+Subtotal base: S/ 75
+Recargo hora pico +25%: S/ 18.75
+Total estimado: S/ 93.75
+```
+
+---
+
+## Política de cancelación
 
 La política de cancelación calcula el reembolso según la anticipación:
 
@@ -546,35 +684,59 @@ La política de cancelación calcula el reembolso según la anticipación:
 | Menos de 24 horas | 0% |
 | Después del inicio de la reserva | 0% |
 
----
+Cuando se cancela una reserva:
 
-## Tarifas dinámicas
-
-El motor de tarifas aplica reglas en orden:
-
-1. Precio base = tarifa por hora × duración.
-2. Recargo por hora pico.
-3. Recargo por fin de semana.
-4. Descuento por reserva larga.
-5. Descuento por reserva anticipada.
-
-El resultado se almacena en la reserva mediante `pricing_breakdown`, permitiendo trazabilidad del cálculo aplicado.
+- Cambia su estado a `Cancelled`.
+- Se calcula el reembolso según la política.
+- Se registra auditoría.
+- La reserva cancelada deja de bloquear disponibilidad.
 
 ---
 
-## Prevención de overbooking
+## Prevención de overbooking y concurrencia
 
-El sistema previene reservas solapadas para el mismo espacio y horario.
+El sistema previene doble reserva usando una estrategia combinada.
 
-La estrategia combina:
+### 1. Validación previa en backend
 
-- Validaciones en backend.
-- Restricciones a nivel de base de datos.
-- Manejo de conflicto en API.
-- Respuesta HTTP `409 Conflict`.
-- Prueba de integración para concurrencia.
+Antes de crear una reserva, el backend consulta si existe una reserva activa que se solape con el mismo espacio y rango horario.
 
-Ejemplo de respuesta:
+La condición de solapamiento usada es:
+
+```text
+existing.StartTime < requested.EndTime
+AND existing.EndTime > requested.StartTime
+```
+
+Esto permite casos borde válidos como:
+
+```text
+10:00 - 11:00
+11:00 - 12:00
+```
+
+pero bloquea casos como:
+
+```text
+10:00 - 11:00
+10:30 - 11:30
+```
+
+### 2. Restricción en PostgreSQL
+
+La base de datos mantiene una restricción para impedir reservas superpuestas a nivel persistencia.
+
+Esto protege el sistema incluso si dos requests llegan al mismo tiempo y pasan la validación previa.
+
+### 3. Manejo como conflicto HTTP
+
+Si se detecta un solapamiento, la API responde como conflicto:
+
+```http
+409 Conflict
+```
+
+Ejemplo:
 
 ```json
 {
@@ -583,6 +745,90 @@ Ejemplo de respuesta:
   "message": "The selected time slot is already reserved for this space."
 }
 ```
+
+### 4. Prueba de integración
+
+Existe una prueba de integración que simula dos requests concurrentes intentando reservar el mismo espacio y horario. El comportamiento esperado es:
+
+```text
+Una reserva se crea correctamente.
+La otra falla con conflicto 409.
+```
+
+---
+
+## Índices para disponibilidad
+
+Para optimizar la consulta de disponibilidad se consideran los siguientes campos:
+
+- `space_id`
+- `start_time`
+- `end_time`
+- `status`
+- rango temporal de reserva
+
+Estos índices ayudan a resolver rápidamente preguntas como:
+
+```text
+¿Qué reservas existen para este espacio entre la apertura y cierre de esta fecha?
+```
+
+La consulta principal usada para disponibilidad y solapamiento busca reservas activas que cumplan:
+
+```text
+space_id = espacio seleccionado
+start_time < fin del rango
+end_time > inicio del rango
+status != Cancelled
+```
+
+La restricción de exclusión en PostgreSQL actúa como garantía final contra overbooking.
+
+---
+
+## Reportes
+
+El endpoint de reportes devuelve información administrativa dentro de un rango de fechas.
+
+Endpoint:
+
+```http
+GET /api/reports
+GET /api/reports?from=2026-06-01T00:00:00Z&to=2026-06-30T23:59:59Z
+```
+
+El reporte incluye:
+
+- Total de reservas.
+- Reservas pendientes.
+- Reservas confirmadas.
+- Reservas canceladas.
+- Reservas completadas.
+- Ingresos totales.
+- Total reembolsado.
+- Ingresos por espacio.
+- Tasa de ocupación por espacio.
+- Espacio más reservado.
+- Hora más demandada.
+- Demanda por hora.
+- Reservas por espacio.
+
+La tasa de ocupación se calcula como:
+
+```text
+ocupación (%) =
+minutos reservados no cancelados dentro del rango
+/
+minutos disponibles del espacio dentro del rango
+× 100
+```
+
+El frontend muestra visualizaciones con barras para:
+
+- Ocupación por espacio.
+- Ingresos por espacio.
+- Reservas por espacio.
+- Demanda por hora.
 
 ---
 
@@ -618,30 +864,6 @@ La auditoría permite identificar:
 
 ---
 
-## Reportes
-
-El dashboard administrativo muestra indicadores como:
-
-- Total de reservas.
-- Reservas pendientes.
-- Reservas confirmadas.
-- Reservas canceladas.
-- Reservas completadas.
-- Ingresos totales.
-- Total reembolsado.
-- Espacio más reservado.
-- Hora más demandada.
-- Reservas por espacio.
-- Demanda por hora.
-
-Endpoint:
-
-```http
-GET /api/reports
-```
-
----
-
 ## Pruebas
 
 Para ejecutar las pruebas:
@@ -653,11 +875,31 @@ dotnet test
 
 Las pruebas cubren:
 
-- Motor de tarifas dinámicas.
-- Política de cancelación.
-- Concurrencia en creación de reservas.
-- Prevención de overbooking.
-- Respuesta esperada `409 Conflict`.
+### Motor de tarifas dinámicas
+
+- Tarifa base simple.
+- Recargo por hora pico.
+- Recargo por fin de semana.
+- Descuento por reserva larga.
+- Descuento por reserva anticipada.
+- Combinación de reglas en orden esperado.
+- Validación de inicio mayor o igual al fin.
+- Validación de duración menor a 30 minutos.
+- Validación de duración mayor a 8 horas.
+
+### Política de cancelación
+
+- Reembolso completo con más de 48 horas.
+- Reembolso del 50% entre 24 y 48 horas.
+- Sin reembolso con menos de 24 horas.
+- Sin reembolso después del inicio de la reserva.
+- Redondeo de monto de reembolso.
+
+### Integración y concurrencia
+
+- Dos requests concurrentes para el mismo espacio y horario.
+- Solo una reserva debe crearse.
+- La otra debe fallar con `409 Conflict`.
 
 ---
 
@@ -693,6 +935,9 @@ Incluye pruebas para:
 
 - Login.
 - Endpoints públicos.
+- Disponibilidad pública por espacio y fecha.
+- Preview de precio.
+- Creación de reserva pública.
 - Endpoints protegidos.
 - CRUD de espacios.
 - CRUD de clientes.
@@ -710,6 +955,13 @@ Puede ejecutarse con:
 - Visual Studio Code + REST Client.
 - Visual Studio.
 - Rider.
+
+Ejemplo de disponibilidad pública:
+
+```http
+GET https://localhost:7011/api/public/spaces/00000000-0000-0000-0000-000000000001/availability?date=2026-06-08
+Accept: application/json
+```
 
 ---
 
@@ -772,6 +1024,55 @@ Password: cowork_password
 ```
 
 Estas credenciales son solo para entorno local.
+
+---
+
+## Validación final
+
+Antes de entregar o revisar el proyecto desde cero:
+
+```bash
+docker compose down --volumes --remove-orphans
+docker compose up -d
+```
+
+Luego:
+
+```bash
+cd backend
+dotnet build
+dotnet test
+cd ..
+```
+
+Luego:
+
+```bash
+cd frontend/cowork-web
+npm install
+npx ng build
+cd ../..
+```
+
+Prueba manual recomendada:
+
+```text
+1. Iniciar sesión como admin.
+2. Revisar espacios.
+3. Crear o editar un espacio.
+4. Entrar al portal público.
+5. Seleccionar espacio y fecha.
+6. Ver slots disponibles y ocupados.
+7. Seleccionar hora de inicio y duración.
+8. Confirmar reserva pública.
+9. Guardar el código de reserva.
+10. Volver a consultar disponibilidad y verificar que el horario quedó ocupado.
+11. Intentar reservar el mismo horario y validar conflicto.
+12. Revisar la reserva en el panel interno.
+13. Cancelar o completar una reserva.
+14. Revisar reportes.
+15. Revisar auditoría.
+```
 
 ---
 
@@ -843,6 +1144,9 @@ Mejoras previstas para una siguiente versión:
 - Tests end-to-end.
 - CI/CD.
 - Despliegue cloud.
+- Vista semanal tipo calendario.
+- Bloqueo temporal de slots mientras el usuario confirma.
+- Notificaciones por correo al crear o cancelar reservas.
 
 ---
 
@@ -854,6 +1158,8 @@ Estado del proyecto:
 - Backend funcional.
 - Frontend funcional.
 - Portal público implementado.
+- Disponibilidad pública por slots implementada.
+- Preview de precio implementado.
 - Login JWT implementado.
 - Roles implementados.
 - Panel interno implementado.
@@ -861,6 +1167,7 @@ Estado del proyecto:
 - Gestión de clientes implementada.
 - Gestión de reservas implementada.
 - Reportes implementados.
+- Tasa de ocupación por espacio implementada.
 - Auditoría implementada.
 - Pruebas unitarias e integración disponibles.
 - Colección HTTP documentada.
