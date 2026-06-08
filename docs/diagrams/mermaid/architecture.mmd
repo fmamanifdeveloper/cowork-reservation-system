@@ -1,18 +1,50 @@
 flowchart LR
-    Client[Cliente / Usuario público] --> Angular[Angular Web App]
-    Admin[Administrador interno] --> Angular
+    %% CoWork Spaces - Architecture Diagram
 
-    Angular --> Api[ASP.NET Core Web API]
+    U[Usuario / Cliente] -->|Navegador| FE[Angular Frontend]
 
-    Api --> Auth[JWT Authentication]
-    Api --> ReservationService[Reservation Service]
-    Api --> PricingService[Dynamic Pricing Service]
-    Api --> ReportService[Reports Service]
+    subgraph Frontend[Frontend - Angular]
+        FE --> Public[Portal Público]
+        FE --> Admin[Panel Administrativo]
+        FE --> Guards[Route Guards]
+        FE --> Interceptor[HTTP Interceptor JWT]
+    end
 
-    ReservationService --> PostgreSQL[(PostgreSQL)]
-    PricingService --> PostgreSQL
-    ReportService --> PostgreSQL
+    FE -->|HTTPS / JSON| API[ASP.NET Core Web API]
 
-    PostgreSQL --> Constraint[Exclusion Constraint<br/>Anti-overbooking]
+    subgraph Backend[Backend - .NET]
+        API --> Controllers[Controllers]
+        Controllers --> App[Application Services]
+        App --> Domain[Domain Entities / Rules]
+        App --> Interfaces[Repository Interfaces]
+        Interfaces --> Infra[Infrastructure]
+        Infra --> EF[Entity Framework Core]
+        API --> Middleware[Exception Middleware]
+        API --> Auth[JWT Authentication]
+        API --> Scalar[OpenAPI / Scalar]
+    end
 
-    Api --> OpenAPI[OpenAPI / Scalar]
+    EF --> DB[(PostgreSQL)]
+
+    subgraph Database[Database]
+        DB --> Users[app_users]
+        DB --> Customers[customers]
+        DB --> Spaces[spaces]
+        DB --> Reservations[reservations]
+        DB --> Audit[audit_logs]
+        DB --> Constraints[Indexes / Constraints]
+    end
+
+    App --> Pricing[Dynamic Pricing]
+    App --> Cancellation[Cancellation Policy]
+    App --> Availability[Availability Slots]
+    App --> Reports[Reports Dashboard]
+    App --> AuditLogger[Audit Logger]
+    AuditLogger --> DB
+
+    style FE fill:#e0f2fe,stroke:#0284c7,color:#0f172a
+    style API fill:#dbeafe,stroke:#2563eb,color:#0f172a
+    style App fill:#ede9fe,stroke:#7c3aed,color:#0f172a
+    style Domain fill:#fef3c7,stroke:#d97706,color:#0f172a
+    style Infra fill:#dcfce7,stroke:#16a34a,color:#0f172a
+    style DB fill:#fee2e2,stroke:#dc2626,color:#0f172a

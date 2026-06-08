@@ -1,9 +1,32 @@
 flowchart TD
-    A[Cliente consulta espacios] --> B[Selecciona espacio]
-    B --> C[Ingresa datos personales y horario]
-    C --> D[Solicita vista previa de precio]
-    D --> E[API calcula precio final]
-    E --> F[Cliente confirma reserva]
-    F --> G{¿Horario disponible?}
-    G -->|Sí| H[Reserva confirmada]
-    G -->|No| I[Mostrar horario no disponible]
+    A[Cliente entra al portal público] --> B[Selecciona espacio]
+    B --> C[Selecciona fecha]
+    C --> D[Frontend solicita disponibilidad]
+    D --> E[Backend genera slots de 30 minutos]
+    E --> F[Frontend muestra libres y ocupados]
+    F --> G{Cliente selecciona slot libre?}
+    G -- No --> F
+    G -- Sí --> H[Frontend calcula duraciones válidas]
+    H --> I[Cliente selecciona duración]
+    I --> J[Frontend calcula startTime y endTime]
+    J --> K[Frontend solicita preview de precio]
+    K --> L[Backend aplica pricing dinámico]
+    L --> M[Frontend muestra total estimado]
+    M --> N{Confirmar reserva?}
+    N -- No --> F
+    N -- Sí --> O[POST crear reserva]
+    O --> P[Backend valida reglas]
+    P --> Q{Hay solapamiento?}
+    Q -- Sí --> R[409 Conflict]
+    R --> S[Frontend recarga disponibilidad]
+    S --> F
+    Q -- No --> T[PostgreSQL inserta reserva]
+    T --> U{Restricción DB OK?}
+    U -- No --> R
+    U -- Sí --> V[Reserva creada]
+    V --> W[Mostrar código de reserva]
+    W --> X[Horario queda ocupado]
+
+    style V fill:#dcfce7,stroke:#16a34a,color:#0f172a
+    style R fill:#fee2e2,stroke:#dc2626,color:#0f172a
+    style L fill:#eff6ff,stroke:#2563eb,color:#0f172a

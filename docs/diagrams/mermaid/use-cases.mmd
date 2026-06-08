@@ -1,13 +1,54 @@
 flowchart LR
-    Client((Cliente))
-    Admin((Administrador))
+    Admin((Admin))
+    Staff((Staff))
+    Customer((Customer))
+    Guest((Cliente invitado))
 
-    Client --> UC1[Consultar espacios]
-    Client --> UC2[Calcular precio]
-    Client --> UC3[Crear reserva]
+    subgraph Public[Portal Público]
+        UC1[Ver espacios]
+        UC2[Consultar disponibilidad]
+        UC3[Seleccionar horario]
+        UC4[Previsualizar precio]
+        UC5[Crear reserva pública]
+        UC6[Guardar código de reserva]
+    end
 
-    Admin --> UC4[Iniciar sesión]
-    Admin --> UC5[Gestionar espacios]
-    Admin --> UC6[Ver reservas]
-    Admin --> UC7[Cancelar reservas]
-    Admin --> UC8[Consultar reportes]
+    subgraph AdminPanel[Panel Interno]
+        UC7[Iniciar sesión]
+        UC8[Gestionar espacios]
+        UC9[Gestionar clientes]
+        UC10[Crear reserva interna]
+        UC11[Cancelar reserva]
+        UC12[Completar reserva]
+        UC13[Ver reportes]
+        UC14[Ver auditoría]
+    end
+
+    Guest --> UC1
+    Guest --> UC2
+    Guest --> UC3
+    Guest --> UC4
+    Guest --> UC5
+    Guest --> UC6
+
+    Customer --> UC7
+    Customer --> UC10
+    Customer --> UC11
+
+    Staff --> UC7
+    Staff --> UC8
+    Staff --> UC9
+    Staff --> UC10
+    Staff --> UC11
+    Staff --> UC12
+    Staff --> UC13
+    Staff --> UC14
+
+    Admin --> UC7
+    Admin --> UC8
+    Admin --> UC9
+    Admin --> UC10
+    Admin --> UC11
+    Admin --> UC12
+    Admin --> UC13
+    Admin --> UC14

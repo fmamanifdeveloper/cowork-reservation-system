@@ -1,5 +1,36 @@
 sequenceDiagram
-    Alice->>John: Hello John, how are you?
-    Alice->>John: John, can you hear me?
-    John-->>Alice: Hi Alice, I can hear you!
-    John-->>Alice: I feel great!
+    autonumber
+    participant C1 as Cliente A
+    participant C2 as Cliente B
+    participant FE as Angular Frontend
+    participant API as ASP.NET Core API
+    participant RS as ReservationService
+    participant Repo as ReservationRepository
+    participant DB as PostgreSQL
+
+    C1->>FE: Selecciona slot disponible
+    C2->>FE: Selecciona el mismo slot disponible
+
+    par Requests concurrentes
+        C1->>API: POST /api/public/reservations
+        API->>RS: Create reservation A
+        RS->>Repo: ExistsOverlappingAsync(space, start, end)
+        Repo->>DB: Buscar reserva solapada
+        DB-->>Repo: No existe
+        RS->>DB: Insert reservation A
+        DB-->>RS: Insert OK
+        RS-->>API: Reserva creada
+        API-->>C1: 201 Created
+    and
+        C2->>API: POST /api/public/reservations
+        API->>RS: Create reservation B
+        RS->>Repo: ExistsOverlappingAsync(space, start, end)
+        Repo->>DB: Buscar reserva solapada
+        DB-->>Repo: Puede no verla por concurrencia
+        RS->>DB: Insert reservation B
+        DB-->>RS: Restricción de solapamiento falla
+        RS-->>API: ReservationConflictException
+        API-->>C2: 409 Conflict
+    end
+
+    Note over DB: PostgreSQL es la garantía final contra overbooking.

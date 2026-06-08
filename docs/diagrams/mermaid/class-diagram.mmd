@@ -1,0 +1,95 @@
+classDiagram
+    direction LR
+
+    class AppUser {
+        +Guid Id
+        +string Username
+        +string PasswordHash
+        +AppUserRole Role
+        +AppUserStatus Status
+        +Guid? CustomerId
+        +DateTimeOffset CreatedAt
+        +DateTimeOffset? UpdatedAt
+    }
+
+    class Customer {
+        +Guid Id
+        +string FullName
+        +string Email
+        +string Phone
+        +string? DocumentNumber
+        +bool IsDeleted
+        +DateTimeOffset CreatedAt
+        +DateTimeOffset? UpdatedAt
+        +Update()
+        +Delete()
+    }
+
+    class Space {
+        +Guid Id
+        +string Name
+        +int Capacity
+        +decimal BaseHourlyRate
+        +TimeOnly OpeningTime
+        +TimeOnly ClosingTime
+        +string TimeZoneId
+        +SpaceStatus Status
+        +bool IsDeleted
+        +IsAvailableForReservation()
+        +Update()
+        +Delete()
+    }
+
+    class Reservation {
+        +Guid Id
+        +string ReservationCode
+        +Guid SpaceId
+        +Guid CustomerId
+        +DateTimeOffset StartTime
+        +DateTimeOffset EndTime
+        +ReservationStatus Status
+        +decimal BaseAmount
+        +decimal FinalAmount
+        +decimal? RefundAmount
+        +string PricingBreakdown
+        +Cancel()
+        +Complete()
+    }
+
+    class AuditLog {
+        +Guid Id
+        +string EventName
+        +string EntityName
+        +Guid? EntityId
+        +Guid? UserId
+        +Guid? CustomerId
+        +string Action
+        +string Message
+        +string? OldValues
+        +string? NewValues
+        +DateTimeOffset CreatedAt
+    }
+
+    class DynamicPricingCalculator {
+        +Calculate(space, startTime, endTime, createdAt)
+    }
+
+    class CancellationPolicyService {
+        +CalculateRefund(reservationStart, requestedAt, finalAmount)
+    }
+
+    class PublicAvailabilityService {
+        +GetAvailabilityAsync(spaceId, date)
+    }
+
+    AppUser "0..1" --> "1" Customer : customer profile
+    Customer "1" --> "0..*" Reservation : creates/owns
+    Space "1" --> "0..*" Reservation : reserved by
+    AppUser "1" --> "0..*" AuditLog : performs
+    Reservation "1" --> "0..*" AuditLog : audited
+
+    DynamicPricingCalculator ..> Space
+    DynamicPricingCalculator ..> Reservation
+    CancellationPolicyService ..> Reservation
+    PublicAvailabilityService ..> Space
+    PublicAvailabilityService ..> Reservation

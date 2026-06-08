@@ -1,150 +1,75 @@
 erDiagram
-    APP_USER_ROLES {
-        smallint id PK
-        varchar code UK
-        varchar label_es
-    }
-
-    APP_USER_STATUSES {
-        smallint id PK
-        varchar code UK
-        varchar label_es
-    }
-
-    SPACE_STATUSES {
-        smallint id PK
-        varchar code UK
-        varchar label_es
-    }
-
-    RESERVATION_STATUSES {
-        smallint id PK
-        varchar code UK
-        varchar label_es
-    }
+    APP_USERS ||--o| CUSTOMERS : "linked_to"
+    CUSTOMERS ||--o{ RESERVATIONS : "has"
+    SPACES ||--o{ RESERVATIONS : "reserved_in"
+    APP_USERS ||--o{ AUDIT_LOGS : "performs"
+    CUSTOMERS ||--o{ AUDIT_LOGS : "related_to"
 
     APP_USERS {
         uuid id PK
+        string username
+        string password_hash
+        string role
+        string status
         uuid customer_id FK
-        varchar username UK
-        varchar password_hash
-        varchar display_name
-        smallint role_id FK
-        smallint status_id FK
-        boolean is_active
-        boolean is_deleted
-        timestamptz last_login_at
         timestamptz created_at
         timestamptz updated_at
-        timestamptz deleted_at
-        uuid created_by_user_id FK
-        uuid updated_by_user_id FK
-        uuid deleted_by_user_id FK
-        integer version
     }
 
     CUSTOMERS {
         uuid id PK
-        varchar full_name
-        varchar email UK
-        varchar phone
-        varchar document_number
+        string full_name
+        string email
+        string phone
+        string document_number
         boolean is_deleted
         timestamptz created_at
         timestamptz updated_at
-        timestamptz deleted_at
-        uuid created_by_user_id FK
-        uuid updated_by_user_id FK
-        uuid deleted_by_user_id FK
-        integer version
     }
 
     SPACES {
         uuid id PK
-        varchar name
+        string name
         int capacity
-        numeric base_hourly_rate
+        decimal base_hourly_rate
         time opening_time
         time closing_time
-        varchar time_zone_id
-        smallint status_id FK
+        string time_zone_id
+        string status
         boolean is_deleted
         timestamptz created_at
         timestamptz updated_at
-        timestamptz deleted_at
-        uuid created_by_user_id FK
-        uuid updated_by_user_id FK
-        uuid deleted_by_user_id FK
-        integer version
     }
 
     RESERVATIONS {
         uuid id PK
-        varchar reservation_code UK
+        string reservation_code
         uuid space_id FK
         uuid customer_id FK
         uuid created_by_user_id FK
-        uuid updated_by_user_id FK
-        uuid cancelled_by_user_id FK
-        uuid completed_by_user_id FK
         timestamptz start_time
         timestamptz end_time
-        smallint status_id FK
-        numeric base_amount
-        numeric final_amount
-        numeric refund_amount
+        string status
+        decimal base_amount
+        decimal final_amount
+        decimal refund_amount
         jsonb pricing_breakdown
-        timestamptz created_at
-        timestamptz updated_at
         timestamptz cancelled_at
         timestamptz completed_at
-        integer version
+        timestamptz created_at
+        timestamptz updated_at
     }
 
     AUDIT_LOGS {
         uuid id PK
-        varchar event_type
-        varchar entity_type
+        string event_name
+        string entity_name
         uuid entity_id
-        uuid actor_user_id FK
-        uuid actor_customer_id FK
-        varchar action
-        varchar description
+        uuid user_id FK
+        uuid customer_id FK
+        string action
+        string message
         jsonb old_values
         jsonb new_values
-        jsonb metadata
-        varchar ip_address
-        varchar user_agent
         timestamptz created_at
     }
-
-    APP_USER_ROLES ||--o{ APP_USERS : clasifica
-    APP_USER_STATUSES ||--o{ APP_USERS : define
-
-    SPACE_STATUSES ||--o{ SPACES : define
-    RESERVATION_STATUSES ||--o{ RESERVATIONS : define
-
-    CUSTOMERS ||--o| APP_USERS : tiene_cuenta
-
-    APP_USERS ||--o{ APP_USERS : crea
-    APP_USERS ||--o{ APP_USERS : actualiza
-    APP_USERS ||--o{ APP_USERS : elimina
-
-    APP_USERS ||--o{ CUSTOMERS : crea
-    APP_USERS ||--o{ CUSTOMERS : actualiza
-    APP_USERS ||--o{ CUSTOMERS : elimina
-
-    APP_USERS ||--o{ SPACES : crea
-    APP_USERS ||--o{ SPACES : actualiza
-    APP_USERS ||--o{ SPACES : elimina
-
-    CUSTOMERS ||--o{ RESERVATIONS : realiza
-    SPACES ||--o{ RESERVATIONS : contiene
-
-    APP_USERS ||--o{ RESERVATIONS : crea
-    APP_USERS ||--o{ RESERVATIONS : actualiza
-    APP_USERS ||--o{ RESERVATIONS : cancela
-    APP_USERS ||--o{ RESERVATIONS : completa
-
-    APP_USERS ||--o{ AUDIT_LOGS : ejecuta
-    CUSTOMERS ||--o{ AUDIT_LOGS : genera
