@@ -8,7 +8,6 @@ import { PublicSpace, PricingPreviewResponse, PublicReservationResponse } from '
 
 @Component({
   selector: 'app-public-reservation-page',
-  standalone: true,
   imports: [FormsModule, RouterLink],
   templateUrl: './public-reservation-page.html',
   styleUrl: './public-reservation-page.scss',

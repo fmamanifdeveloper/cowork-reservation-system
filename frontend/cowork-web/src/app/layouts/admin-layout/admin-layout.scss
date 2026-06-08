@@ -1,7 +1,7 @@
 .admin-shell {
     min-height: 100vh;
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 280px minmax(0, 1fr);
     background: #f3f4f6;
 }
 
@@ -27,6 +27,8 @@
     }
 
     span {
+        display: block;
+        margin-top: 0.15rem;
         color: rgba(255, 255, 255, 0.64);
         font-size: 0.85rem;
     }
@@ -37,6 +39,7 @@
     height: 44px;
     display: grid;
     place-items: center;
+    flex: 0 0 auto;
     border-radius: 14px;
     background: #2563eb;
     color: #ffffff;
@@ -54,6 +57,9 @@
         color: rgba(255, 255, 255, 0.76);
         text-decoration: none;
         font-weight: 700;
+        transition:
+            background 140ms ease,
+            color 140ms ease;
 
         &:hover,
         &.active {
@@ -76,9 +82,20 @@
     padding: 0 1.5rem;
     background: #ffffff;
     border-bottom: 1px solid #e5e7eb;
+}
+
+.topbar-user {
+    min-width: 0;
+    margin-right: auto;
+
+    strong {
+        display: block;
+        color: #111827;
+    }
 
     span {
         display: block;
+        margin-top: 0.15rem;
         color: #6b7280;
         font-size: 0.85rem;
     }
@@ -97,6 +114,7 @@
     height: 42px;
     border-radius: 12px;
     background: #f3f4f6;
+    color: #111827;
 }
 
 .logout-button {
@@ -152,5 +170,23 @@
 
     .content {
         padding: 1rem;
+    }
+}
+
+@media (max-width: 560px) {
+    .topbar {
+        height: auto;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 1rem;
+    }
+
+    .topbar-user {
+        order: 3;
+        width: 100%;
+    }
+
+    .logout-button {
+        margin-left: auto;
     }
 }

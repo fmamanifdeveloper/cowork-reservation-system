@@ -8,7 +8,6 @@ import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-login-page',
-  standalone: true,
   imports: [FormsModule],
   templateUrl: './login-page.html',
   styleUrl: './login-page.scss',

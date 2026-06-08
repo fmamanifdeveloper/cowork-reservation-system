@@ -2,6 +2,7 @@
     <aside class="sidebar">
         <div class="sidebar-brand">
             <div class="brand-mark">CW</div>
+
             <div>
                 <strong>CoWork</strong>
                 <span>Admin Panel</span>
@@ -9,12 +10,33 @@
         </div>
 
         <nav class="sidebar-nav">
-            <a routerLink="/admin/dashboard" routerLinkActive="active" (click)="closeSidebar()">Dashboard</a>
-            <a routerLink="/admin/spaces" routerLinkActive="active" (click)="closeSidebar()">Espacios</a>
-            <a routerLink="/admin/customers" routerLinkActive="active" (click)="closeSidebar()">Clientes</a>
-            <a routerLink="/admin/reservations" routerLinkActive="active" (click)="closeSidebar()">Reservas</a>
-            <a routerLink="/admin/reports" routerLinkActive="active" (click)="closeSidebar()">Reportes</a>
-            <a routerLink="/admin/audit-logs" routerLinkActive="active" (click)="closeSidebar()">Auditoría</a>
+            <a routerLink="/admin/dashboard" routerLinkActive="active" (click)="closeSidebar()">
+                Dashboard
+            </a>
+
+            @if (canManageAdministration()) {
+            <a routerLink="/admin/spaces" routerLinkActive="active" (click)="closeSidebar()">
+                Espacios
+            </a>
+
+            <a routerLink="/admin/customers" routerLinkActive="active" (click)="closeSidebar()">
+                Clientes
+            </a>
+            }
+
+            <a routerLink="/admin/reservations" routerLinkActive="active" (click)="closeSidebar()">
+                Reservas
+            </a>
+
+            @if (canManageAdministration()) {
+            <a routerLink="/admin/reports" routerLinkActive="active" (click)="closeSidebar()">
+                Reportes
+            </a>
+
+            <a routerLink="/admin/audit-logs" routerLinkActive="active" (click)="closeSidebar()">
+                Auditoría
+            </a>
+            }
         </nav>
     </aside>
 
@@ -26,7 +48,7 @@
                 ☰
             </button>
 
-            <div>
+            <div class="topbar-user">
                 <strong>{{ authStore.displayName() || 'Usuario' }}</strong>
                 <span>{{ authStore.role() }}</span>
             </div>

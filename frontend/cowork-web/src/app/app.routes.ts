@@ -17,6 +17,11 @@ export const routes: Routes = [
         component: LoginPage
     },
     {
+        path: 'forbidden',
+        loadComponent: () =>
+            import('./features/forbidden/forbidden-page/forbidden-page').then(m => m.ForbiddenPage)
+    },
+    {
         path: 'public',
         component: PublicLayout,
         children: [

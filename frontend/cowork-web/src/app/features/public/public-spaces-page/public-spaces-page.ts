@@ -6,7 +6,6 @@ import { PublicSpace } from '../public-models';
 
 @Component({
   selector: 'app-public-spaces-page',
-  standalone: true,
   imports: [RouterLink],
   templateUrl: './public-spaces-page.html',
   styleUrl: './public-spaces-page.scss',

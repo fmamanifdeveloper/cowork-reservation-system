@@ -4,7 +4,6 @@ import { NotificationBanner } from './shared/ui/notification-banner/notification
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   imports: [RouterOutlet, NotificationBanner],
   templateUrl: './app.html',
   styleUrl: './app.scss'

@@ -1,19 +1,23 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthStore } from '@core/auth/auth-store';
 
 @Component({
   selector: 'app-admin-layout',
-  standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.scss',
 })
 export class AdminLayout {
   private readonly router = inject(Router);
+
   readonly authStore: AuthStore = inject(AuthStore);
 
   readonly isSidebarOpen = signal(false);
+
+  readonly canManageAdministration = computed(() =>
+    this.authStore.hasAnyRole(['Admin', 'Staff'])
+  );
 
   toggleSidebar(): void {
     this.isSidebarOpen.update(value => !value);

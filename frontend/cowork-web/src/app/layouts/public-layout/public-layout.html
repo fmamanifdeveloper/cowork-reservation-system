@@ -1,13 +1,13 @@
 <section class="public-shell">
     <header class="public-header">
-        <a routerLink="/public" class="brand">
+        <a routerLink="/public/spaces" class="brand">
             <span>CW</span>
             <strong>CoWork Spaces</strong>
         </a>
 
         <nav>
-            <a routerLink="/public">Inicio</a>
             <a routerLink="/public/spaces">Espacios</a>
+            <a routerLink="/public/reservation">Reservar</a>
 
             @if (authStore.isAuthenticated()) {
             <a routerLink="/admin/dashboard">Panel</a>
