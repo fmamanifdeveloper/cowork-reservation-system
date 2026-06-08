@@ -10,11 +10,19 @@ public interface IReservationRepository
         Guid customerId,
         CancellationToken cancellationToken);
 
-    Task<Reservation?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<Reservation?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken);
 
     Task<IReadOnlyList<Reservation>> ListByRangeAsync(
         DateTimeOffset from,
         DateTimeOffset to,
+        CancellationToken cancellationToken);
+
+    Task<bool> ExistsOverlappingAsync(
+        Guid spaceId,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
         CancellationToken cancellationToken);
 
     void Add(Reservation reservation);

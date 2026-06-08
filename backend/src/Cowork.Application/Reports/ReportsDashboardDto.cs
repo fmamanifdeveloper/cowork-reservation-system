@@ -1,8 +1,8 @@
 ﻿namespace Cowork.Application.Reports;
 
 public sealed record ReportsDashboardDto(
-    DateTimeOffset From,
-    DateTimeOffset To,
+    DateTimeOffset DateFrom,
+    DateTimeOffset DateTo,
     int TotalReservations,
     int PendingReservations,
     int ConfirmedReservations,

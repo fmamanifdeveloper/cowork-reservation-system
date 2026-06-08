@@ -207,20 +207,81 @@
                         <i class="ti ti-check"></i>
                     </div>
 
-                    <h3>Reserva creada</h3>
+                    <span class="success-label">Reserva registrada</span>
 
-                    <p>Tu código de reserva es:</p>
+                    <h3>Tu reserva fue creada correctamente</h3>
 
-                    <strong>{{ reservation.reservationCode }}</strong>
+                    <p>
+                        Guarda este código. El personal podrá ubicar tu reserva usando este número.
+                    </p>
 
-                    <small>
-                        Inicio: {{ formatDate(reservation.startTime) }}<br />
-                        Fin: {{ formatDate(reservation.endTime) }}
+                    <div class="reservation-code-box">
+                        <span>Código de reserva</span>
+                        <strong>{{ reservation.reservationCode }}</strong>
+
+                        <button type="button" class="copy-button" (click)="copyReservationCode()">
+                            <i class="ti ti-copy"></i>
+                            Copiar código
+                        </button>
+                    </div>
+
+                    <div class="next-steps">
+                        <h4>¿Qué sigue?</h4>
+
+                        <ul>
+                            <li>
+                                <i class="ti ti-clock"></i>
+                                Llega unos minutos antes del horario reservado.
+                            </li>
+
+                            <li>
+                                <i class="ti ti-user-check"></i>
+                                Indica tu código de reserva al personal de atención.
+                            </li>
+
+                            <li>
+                                <i class="ti ti-cash"></i>
+                                La confirmación final o pago se coordina con el establecimiento.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="reservation-detail-box">
+                        <div>
+                            <span>Estado</span>
+                            <strong>{{ getReservationStatusLabel(reservation.status) }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Inicio</span>
+                            <strong>{{ formatDate(reservation.startTime) }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Fin</span>
+                            <strong>{{ formatDate(reservation.endTime) }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Total estimado</span>
+                            <strong>{{ formatCurrency(reservation.finalAmount) }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="success-actions">
+                        <button type="button" class="btn btn--ghost btn--block" (click)="resetForm()">
+                            Crear otra reserva
+                        </button>
+
+                        <a class="btn btn--primary btn--block" routerLink="/public/spaces">
+                            Volver a espacios
+                        </a>
+                    </div>
+
+                    <small class="account-note">
+                        Más adelante podrás crear una cuenta para consultar y administrar tus reservas desde un panel de
+                        cliente.
                     </small>
-
-                    <button type="button" class="btn btn--block" (click)="resetForm()">
-                        Crear otra reserva
-                    </button>
                 </div>
                 }
             </div>

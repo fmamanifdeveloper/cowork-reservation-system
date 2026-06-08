@@ -1,5 +1,6 @@
 ﻿using Cowork.Application.Common.Interfaces;
 using Cowork.Domain.Entities;
+using Cowork.Domain.Enums;
 using Cowork.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,11 +45,34 @@ public sealed class ReservationRepository : IReservationRepository
         DateTimeOffset to,
         CancellationToken cancellationToken)
     {
+        var fromUtc = from.ToUniversalTime();
+        var toUtc = to.ToUniversalTime();
+
         return await _dbContext.Reservations
             .AsNoTracking()
-            .Where(x => x.StartTime < to && x.EndTime > from)
+            .Where(x => x.StartTime < toUtc && x.EndTime > fromUtc)
             .OrderBy(x => x.StartTime)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExistsOverlappingAsync(
+        Guid spaceId,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
+        CancellationToken cancellationToken)
+    {
+        var startTimeUtc = startTime.ToUniversalTime();
+        var endTimeUtc = endTime.ToUniversalTime();
+
+        return await _dbContext.Reservations
+            .AsNoTracking()
+            .AnyAsync(
+                x =>
+                    x.SpaceId == spaceId &&
+                    x.Status != ReservationStatus.Cancelled &&
+                    x.StartTime < endTimeUtc &&
+                    x.EndTime > startTimeUtc,
+                cancellationToken);
     }
 
     public void Add(Reservation reservation)

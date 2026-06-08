@@ -4,4 +4,5 @@ public sealed record SpaceReportItemDto(
     Guid SpaceId,
     string SpaceName,
     int ReservationCount,
-    decimal Revenue);
+    decimal Revenue,
+    decimal OccupancyRatePercent);

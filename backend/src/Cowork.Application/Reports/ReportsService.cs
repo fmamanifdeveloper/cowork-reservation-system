@@ -46,37 +46,51 @@ public sealed class ReportsService
         var cancelledReservations = reservations.Count(x => x.Status == ReservationStatus.Cancelled);
         var completedReservations = reservations.Count(x => x.Status == ReservationStatus.Completed);
 
-        var totalRevenue = reservations
+        var billableReservations = reservations
             .Where(x => x.Status != ReservationStatus.Cancelled)
+            .ToList();
+
+        var totalRevenue = billableReservations
             .Sum(x => x.FinalAmount);
 
         var totalRefundAmount = reservations
             .Where(x => x.RefundAmount.HasValue)
             .Sum(x => x.RefundAmount!.Value);
 
-        var spaceReportItems = reservations
-            .GroupBy(x => x.SpaceId)
-            .Select(group =>
+        var spaceReportItems = spaces
+            .Select(space =>
             {
-                var spaceName = spacesById.TryGetValue(group.Key, out var space)
-                    ? space.Name
-                    : "Unknown space";
+                var reservationsForSpace = reservations
+                    .Where(x => x.SpaceId == space.Id)
+                    .ToList();
 
-                var revenue = group
+                var billableReservationsForSpace = reservationsForSpace
                     .Where(x => x.Status != ReservationStatus.Cancelled)
+                    .ToList();
+
+                var revenue = billableReservationsForSpace
                     .Sum(x => x.FinalAmount);
 
+                var occupancyRatePercent = CalculateOccupancyRatePercent(
+                    billableReservationsForSpace,
+                    space,
+                    dateFrom,
+                    dateTo);
+
                 return new SpaceReportItemDto(
-                    group.Key,
-                    spaceName,
-                    group.Count(),
-                    revenue);
+                    space.Id,
+                    space.Name,
+                    reservationsForSpace.Count,
+                    revenue,
+                    occupancyRatePercent);
             })
             .OrderByDescending(x => x.ReservationCount)
             .ThenByDescending(x => x.Revenue)
+            .ThenBy(x => x.SpaceName)
             .ToList();
 
         var mostReservedSpaceName = spaceReportItems
+            .Where(x => x.ReservationCount > 0)
             .FirstOrDefault()
             ?.SpaceName;
 
@@ -113,6 +127,78 @@ public sealed class ReportsService
             mostDemandedHour,
             spaceReportItems,
             hourlyDemand);
+    }
+
+    private static decimal CalculateOccupancyRatePercent(
+        IReadOnlyList<Reservation> reservations,
+        Space space,
+        DateTimeOffset dateFrom,
+        DateTimeOffset dateTo)
+    {
+        var availableMinutes = CalculateAvailableMinutes(
+            space,
+            dateFrom,
+            dateTo);
+
+        if (availableMinutes <= 0)
+            return 0;
+
+        var occupiedMinutes = reservations.Sum(reservation =>
+            CalculateOverlappedMinutes(
+                reservation.StartTime,
+                reservation.EndTime,
+                dateFrom,
+                dateTo));
+
+        if (occupiedMinutes <= 0)
+            return 0;
+
+        var rate = (decimal)occupiedMinutes / availableMinutes * 100;
+
+        return Math.Round(rate, 2);
+    }
+
+    private static decimal CalculateAvailableMinutes(
+        Space space,
+        DateTimeOffset dateFrom,
+        DateTimeOffset dateTo)
+    {
+        var timeZone = ResolveTimeZone(space.TimeZoneId);
+
+        var localFrom = TimeZoneInfo.ConvertTime(dateFrom, timeZone).Date;
+        var localTo = TimeZoneInfo.ConvertTime(dateTo, timeZone).Date;
+
+        var days = (localTo - localFrom).Days + 1;
+
+        if (days <= 0)
+            return 0;
+
+        var dailyAvailableMinutes = (decimal)(space.ClosingTime - space.OpeningTime).TotalMinutes;
+
+        if (dailyAvailableMinutes <= 0)
+            return 0;
+
+        return days * dailyAvailableMinutes;
+    }
+
+    private static double CalculateOverlappedMinutes(
+        DateTimeOffset reservationStart,
+        DateTimeOffset reservationEnd,
+        DateTimeOffset rangeStart,
+        DateTimeOffset rangeEnd)
+    {
+        var effectiveStart = reservationStart > rangeStart
+            ? reservationStart
+            : rangeStart;
+
+        var effectiveEnd = reservationEnd < rangeEnd
+            ? reservationEnd
+            : rangeEnd;
+
+        if (effectiveStart >= effectiveEnd)
+            return 0;
+
+        return (effectiveEnd - effectiveStart).TotalMinutes;
     }
 
     private static int GetLocalStartHour(

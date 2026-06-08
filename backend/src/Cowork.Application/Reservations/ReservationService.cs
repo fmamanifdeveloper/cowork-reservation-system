@@ -105,7 +105,9 @@ public sealed class ReservationService
         if (customerId == Guid.Empty)
             throw new BusinessRuleException("Customer id is required.");
 
-        var space = await _spaceRepository.GetByIdAsync(request.SpaceId, cancellationToken);
+        var space = await _spaceRepository.GetByIdAsync(
+            request.SpaceId,
+            cancellationToken);
 
         if (space is null)
             throw new NotFoundException("Space was not found.");
@@ -113,7 +115,9 @@ public sealed class ReservationService
         if (!space.IsAvailableForReservation())
             throw new BusinessRuleException("The selected space is not available for reservations.");
 
-        var customer = await _customerRepository.GetByIdAsync(customerId, cancellationToken);
+        var customer = await _customerRepository.GetByIdAsync(
+            customerId,
+            cancellationToken);
 
         if (customer is null)
             throw new NotFoundException("Customer was not found.");
@@ -122,6 +126,21 @@ public sealed class ReservationService
             space,
             request.StartTime,
             request.EndTime);
+
+        var startTimeUtc = request.StartTime.ToUniversalTime();
+        var endTimeUtc = request.EndTime.ToUniversalTime();
+
+        var hasOverlap = await _reservationRepository.ExistsOverlappingAsync(
+            space.Id,
+            startTimeUtc,
+            endTimeUtc,
+            cancellationToken);
+
+        if (hasOverlap)
+        {
+            throw new ReservationConflictException(
+                "The selected space is already reserved for the requested time range.");
+        }
 
         var createdAt = DateTimeOffset.UtcNow;
 
@@ -139,8 +158,8 @@ public sealed class ReservationService
             space.Id,
             customer.Id,
             currentUserId,
-            request.StartTime.ToUniversalTime(),
-            request.EndTime.ToUniversalTime(),
+            startTimeUtc,
+            endTimeUtc,
             pricingResult.BaseAmount,
             pricingResult.FinalAmount,
             pricingBreakdown,
@@ -183,7 +202,9 @@ public sealed class ReservationService
     {
         var currentUserId = _currentUserService.UserId;
 
-        var reservation = await _reservationRepository.GetByIdAsync(id, cancellationToken);
+        var reservation = await _reservationRepository.GetByIdAsync(
+            id,
+            cancellationToken);
 
         if (reservation is null)
             throw new NotFoundException("Reservation was not found.");
@@ -239,7 +260,9 @@ public sealed class ReservationService
     {
         var currentUserId = _currentUserService.UserId;
 
-        var reservation = await _reservationRepository.GetByIdAsync(id, cancellationToken);
+        var reservation = await _reservationRepository.GetByIdAsync(
+            id,
+            cancellationToken);
 
         if (reservation is null)
             throw new NotFoundException("Reservation was not found.");
@@ -255,7 +278,9 @@ public sealed class ReservationService
             reservation.CompletedAt
         };
 
-        reservation.Complete(DateTimeOffset.UtcNow, currentUserId);
+        reservation.Complete(
+            DateTimeOffset.UtcNow,
+            currentUserId);
 
         await _auditLogger.LogAsync(
             "ReservationCompleted",
@@ -327,7 +352,7 @@ public sealed class ReservationService
         if (duration > TimeSpan.FromHours(8))
             throw new BusinessRuleException("Reservation duration must not exceed 8 hours.");
 
-        var timeZone = TimeZoneInfo.FindSystemTimeZoneById(space.TimeZoneId);
+        var timeZone = ResolveTimeZone(space.TimeZoneId);
 
         var localStart = TimeZoneInfo.ConvertTime(startTime, timeZone);
         var localEnd = TimeZoneInfo.ConvertTime(endTime, timeZone);
@@ -342,6 +367,22 @@ public sealed class ReservationService
         {
             throw new BusinessRuleException(
                 $"Reservation must be within space opening hours: {space.OpeningTime:HH:mm} - {space.ClosingTime:HH:mm}.");
+        }
+    }
+
+    private static TimeZoneInfo ResolveTimeZone(string timeZoneId)
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        }
+        catch (TimeZoneNotFoundException) when (timeZoneId == "America/Lima")
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
+        }
+        catch (InvalidTimeZoneException) when (timeZoneId == "America/Lima")
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
         }
     }
 

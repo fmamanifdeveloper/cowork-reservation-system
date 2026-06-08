@@ -1,6 +1,6 @@
 export interface ReportsDashboard {
-  from: string;
-  to: string;
+  dateFrom: string;
+  dateTo: string;
   totalReservations: number;
   pendingReservations: number;
   confirmedReservations: number;
@@ -19,6 +19,7 @@ export interface SpaceReportItem {
   spaceName: string;
   reservationCount: number;
   revenue: number;
+  occupancyRatePercent: number;
 }
 
 export interface HourlyDemandItem {

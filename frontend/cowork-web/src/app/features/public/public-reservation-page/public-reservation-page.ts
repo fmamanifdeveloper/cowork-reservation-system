@@ -345,4 +345,33 @@ export class PublicReservationPage {
       endTime: ''
     };
   }
+
+  copyReservationCode(): void {
+    const reservation = this.createdReservation();
+
+    if (!reservation?.reservationCode) {
+      this.notificationStore.warning('No hay código de reserva para copiar.');
+      return;
+    }
+
+    navigator.clipboard
+      .writeText(reservation.reservationCode)
+      .then(() => {
+        this.notificationStore.success('Código de reserva copiado.');
+      })
+      .catch(() => {
+        this.notificationStore.warning('No se pudo copiar el código automáticamente.');
+      });
+  }
+
+  getReservationStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      Pending: 'Pendiente',
+      Confirmed: 'Confirmada',
+      Cancelled: 'Cancelada',
+      Completed: 'Completada'
+    };
+
+    return labels[status] ?? status;
+  }
 }
