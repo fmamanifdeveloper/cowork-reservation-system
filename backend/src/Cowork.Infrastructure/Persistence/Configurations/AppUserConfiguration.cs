@@ -4,43 +4,35 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Cowork.Infrastructure.Persistence.Configurations;
 
-public sealed class SpaceConfiguration : IEntityTypeConfiguration<Space>
+public sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 {
-    public void Configure(EntityTypeBuilder<Space> builder)
+    public void Configure(EntityTypeBuilder<AppUser> builder)
     {
-        builder.ToTable("spaces");
+        builder.ToTable("app_users");
 
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.CustomerId).HasColumnName("customer_id");
 
-        builder.Property(x => x.Name)
-            .HasColumnName("name")
+        builder.Property(x => x.Username)
+            .HasColumnName("username")
             .HasMaxLength(120)
             .IsRequired();
 
-        builder.Property(x => x.Capacity)
-            .HasColumnName("capacity")
+        builder.Property(x => x.PasswordHash)
+            .HasColumnName("password_hash")
+            .HasMaxLength(500)
             .IsRequired();
 
-        builder.Property(x => x.BaseHourlyRate)
-            .HasColumnName("base_hourly_rate")
-            .HasColumnType("numeric(10,2)")
+        builder.Property(x => x.DisplayName)
+            .HasColumnName("display_name")
+            .HasMaxLength(160)
             .IsRequired();
 
-        builder.Property(x => x.OpeningTime)
-            .HasColumnName("opening_time")
-            .HasColumnType("time")
-            .IsRequired();
-
-        builder.Property(x => x.ClosingTime)
-            .HasColumnName("closing_time")
-            .HasColumnType("time")
-            .IsRequired();
-
-        builder.Property(x => x.TimeZoneId)
-            .HasColumnName("time_zone_id")
-            .HasMaxLength(80)
+        builder.Property(x => x.Role)
+            .HasColumnName("role_id")
+            .HasConversion<int>()
             .IsRequired();
 
         builder.Property(x => x.Status)
@@ -48,7 +40,10 @@ public sealed class SpaceConfiguration : IEntityTypeConfiguration<Space>
             .HasConversion<int>()
             .IsRequired();
 
+        builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(x => x.IsDeleted).HasColumnName("is_deleted").IsRequired();
+
+        builder.Property(x => x.LastLoginAt).HasColumnName("last_login_at");
 
         builder.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
@@ -59,6 +54,14 @@ public sealed class SpaceConfiguration : IEntityTypeConfiguration<Space>
         builder.Property(x => x.DeletedByUserId).HasColumnName("deleted_by_user_id");
 
         builder.Property(x => x.Version).HasColumnName("version").IsRequired();
+
+        builder.HasIndex(x => x.Username).IsUnique();
+        builder.HasIndex(x => x.CustomerId).IsUnique();
+
+        builder.HasOne<Customer>()
+            .WithMany()
+            .HasForeignKey(x => x.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<AppUser>()
             .WithMany()

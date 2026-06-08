@@ -4,49 +4,32 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Cowork.Infrastructure.Persistence.Configurations;
 
-public sealed class SpaceConfiguration : IEntityTypeConfiguration<Space>
+public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 {
-    public void Configure(EntityTypeBuilder<Space> builder)
+    public void Configure(EntityTypeBuilder<Customer> builder)
     {
-        builder.ToTable("spaces");
+        builder.ToTable("customers");
 
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id).HasColumnName("id");
 
-        builder.Property(x => x.Name)
-            .HasColumnName("name")
-            .HasMaxLength(120)
+        builder.Property(x => x.FullName)
+            .HasColumnName("full_name")
+            .HasMaxLength(160)
             .IsRequired();
 
-        builder.Property(x => x.Capacity)
-            .HasColumnName("capacity")
-            .IsRequired();
+        builder.Property(x => x.Email)
+            .HasColumnName("email")
+            .HasMaxLength(160);
 
-        builder.Property(x => x.BaseHourlyRate)
-            .HasColumnName("base_hourly_rate")
-            .HasColumnType("numeric(10,2)")
-            .IsRequired();
+        builder.Property(x => x.Phone)
+            .HasColumnName("phone")
+            .HasMaxLength(40);
 
-        builder.Property(x => x.OpeningTime)
-            .HasColumnName("opening_time")
-            .HasColumnType("time")
-            .IsRequired();
-
-        builder.Property(x => x.ClosingTime)
-            .HasColumnName("closing_time")
-            .HasColumnType("time")
-            .IsRequired();
-
-        builder.Property(x => x.TimeZoneId)
-            .HasColumnName("time_zone_id")
-            .HasMaxLength(80)
-            .IsRequired();
-
-        builder.Property(x => x.Status)
-            .HasColumnName("status_id")
-            .HasConversion<int>()
-            .IsRequired();
+        builder.Property(x => x.DocumentNumber)
+            .HasColumnName("document_number")
+            .HasMaxLength(40);
 
         builder.Property(x => x.IsDeleted).HasColumnName("is_deleted").IsRequired();
 

@@ -4,16 +4,10 @@ namespace Cowork.Domain.Entities;
 
 public sealed class Space
 {
-    public Guid Id { get; private set; }
-    public string Name { get; private set; } = default!;
-    public int Capacity { get; private set; }
-    public decimal BaseHourlyRate { get; private set; }
-    public TimeOnly OpeningTime { get; private set; }
-    public TimeOnly ClosingTime { get; private set; }
-    public SpaceStatus Status { get; private set; }
-
     private Space()
     {
+        Name = string.Empty;
+        TimeZoneId = "America/Lima";
     }
 
     public Space(
@@ -23,22 +17,11 @@ public sealed class Space
         decimal baseHourlyRate,
         TimeOnly openingTime,
         TimeOnly closingTime,
-        SpaceStatus status)
+        SpaceStatus status,
+        string timeZoneId = "America/Lima",
+        Guid? createdByUserId = null)
     {
-        if (id == Guid.Empty)
-            throw new ArgumentException("Space id is required.", nameof(id));
-
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Space name is required.", nameof(name));
-
-        if (capacity <= 0)
-            throw new ArgumentException("Capacity must be greater than zero.", nameof(capacity));
-
-        if (baseHourlyRate <= 0)
-            throw new ArgumentException("Base hourly rate must be greater than zero.", nameof(baseHourlyRate));
-
-        if (openingTime >= closingTime)
-            throw new ArgumentException("Opening time must be earlier than closing time.");
+        Validate(name, capacity, baseHourlyRate, openingTime, closingTime, timeZoneId);
 
         Id = id;
         Name = name.Trim();
@@ -46,31 +29,80 @@ public sealed class Space
         BaseHourlyRate = baseHourlyRate;
         OpeningTime = openingTime;
         ClosingTime = closingTime;
+        TimeZoneId = timeZoneId.Trim();
         Status = status;
+
+        IsDeleted = false;
+        CreatedAt = DateTimeOffset.UtcNow;
+        CreatedByUserId = createdByUserId;
+        Version = 1;
     }
+
+    public Guid Id { get; private set; }
+
+    public string Name { get; private set; }
+    public int Capacity { get; private set; }
+    public decimal BaseHourlyRate { get; private set; }
+
+    public TimeOnly OpeningTime { get; private set; }
+    public TimeOnly ClosingTime { get; private set; }
+    public string TimeZoneId { get; private set; }
+
+    public SpaceStatus Status { get; private set; }
+    public bool IsDeleted { get; private set; }
+
+    public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset? UpdatedAt { get; private set; }
+    public DateTimeOffset? DeletedAt { get; private set; }
+
+    public Guid? CreatedByUserId { get; private set; }
+    public Guid? UpdatedByUserId { get; private set; }
+    public Guid? DeletedByUserId { get; private set; }
+
+    public int Version { get; private set; }
 
     public bool IsAvailableForReservation()
     {
-        return Status == SpaceStatus.Active;
-    }
-
-    public void SetMaintenance()
-    {
-        Status = SpaceStatus.Maintenance;
-    }
-
-    public void Activate()
-    {
-        Status = SpaceStatus.Active;
+        return Status == SpaceStatus.Active && !IsDeleted;
     }
 
     public void Update(
-    string name,
-    int capacity,
-    decimal baseHourlyRate,
-    TimeOnly openingTime,
-    TimeOnly closingTime,
-    SpaceStatus status)
+        string name,
+        int capacity,
+        decimal baseHourlyRate,
+        TimeOnly openingTime,
+        TimeOnly closingTime,
+        SpaceStatus status,
+        string timeZoneId = "America/Lima",
+        Guid? updatedByUserId = null)
+    {
+        Validate(name, capacity, baseHourlyRate, openingTime, closingTime, timeZoneId);
+
+        Name = name.Trim();
+        Capacity = capacity;
+        BaseHourlyRate = baseHourlyRate;
+        OpeningTime = openingTime;
+        ClosingTime = closingTime;
+        TimeZoneId = timeZoneId.Trim();
+        Status = status;
+        UpdatedByUserId = updatedByUserId;
+    }
+
+    public void Delete(Guid? deletedByUserId = null)
+    {
+        IsDeleted = true;
+        DeletedAt = DateTimeOffset.UtcNow;
+        DeletedByUserId = deletedByUserId;
+        Status = SpaceStatus.Inactive;
+    }
+
+    private static void Validate(
+        string name,
+        int capacity,
+        decimal baseHourlyRate,
+        TimeOnly openingTime,
+        TimeOnly closingTime,
+        string timeZoneId)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Space name is required.", nameof(name));
@@ -84,11 +116,7 @@ public sealed class Space
         if (openingTime >= closingTime)
             throw new ArgumentException("Opening time must be earlier than closing time.");
 
-        Name = name.Trim();
-        Capacity = capacity;
-        BaseHourlyRate = baseHourlyRate;
-        OpeningTime = openingTime;
-        ClosingTime = closingTime;
-        Status = status;
+        if (string.IsNullOrWhiteSpace(timeZoneId))
+            throw new ArgumentException("Time zone is required.", nameof(timeZoneId));
     }
 }

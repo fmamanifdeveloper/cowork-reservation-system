@@ -10,8 +10,11 @@ public sealed class CoworkDbContext : DbContext
     {
     }
 
+    public DbSet<AppUser> AppUsers => Set<AppUser>();
+    public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Space> Spaces => Set<Space>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
