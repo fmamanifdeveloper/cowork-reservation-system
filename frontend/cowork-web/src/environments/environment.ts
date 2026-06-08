@@ -1,4 +1,4 @@
 export const environment = {
     production: true,
-    apiBaseUrl: 'https://api.cowork-spaces.com/api'
+    apiBaseUrl: 'https://cowork-reservation-system.onrender.com/api'
 };
