@@ -8,15 +8,18 @@ public sealed class SpaceService
 {
     private readonly ISpaceRepository _spaceRepository;
     private readonly IAuditLogger _auditLogger;
+    private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWork _unitOfWork;
 
     public SpaceService(
         ISpaceRepository spaceRepository,
         IAuditLogger auditLogger,
+        ICurrentUserService currentUserService,
         IUnitOfWork unitOfWork)
     {
         _spaceRepository = spaceRepository;
         _auditLogger = auditLogger;
+        _currentUserService = currentUserService;
         _unitOfWork = unitOfWork;
     }
 
@@ -40,6 +43,8 @@ public sealed class SpaceService
         CreateSpaceRequest request,
         CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId;
+
         var space = new Space(
             Guid.NewGuid(),
             request.Name,
@@ -48,7 +53,8 @@ public sealed class SpaceService
             request.OpeningTime,
             request.ClosingTime,
             request.Status,
-            request.TimeZoneId ?? "America/Lima");
+            request.TimeZoneId ?? "America/Lima",
+            currentUserId);
 
         _spaceRepository.Add(space);
 
@@ -56,7 +62,7 @@ public sealed class SpaceService
             "SpaceCreated",
             "Space",
             space.Id,
-            null,
+            currentUserId,
             null,
             "Create",
             "Space was created.",
@@ -70,7 +76,8 @@ public sealed class SpaceService
                 space.OpeningTime,
                 space.ClosingTime,
                 space.TimeZoneId,
-                space.Status
+                space.Status,
+                space.CreatedByUserId
             },
             null,
             cancellationToken);
@@ -85,6 +92,8 @@ public sealed class SpaceService
         UpdateSpaceRequest request,
         CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId;
+
         var space = await _spaceRepository.GetByIdAsync(id, cancellationToken);
 
         if (space is null)
@@ -98,7 +107,8 @@ public sealed class SpaceService
             space.OpeningTime,
             space.ClosingTime,
             space.TimeZoneId,
-            space.Status
+            space.Status,
+            space.UpdatedByUserId
         };
 
         space.Update(
@@ -108,13 +118,14 @@ public sealed class SpaceService
             request.OpeningTime,
             request.ClosingTime,
             request.Status,
-            request.TimeZoneId ?? "America/Lima");
+            request.TimeZoneId ?? "America/Lima",
+            currentUserId);
 
         await _auditLogger.LogAsync(
             "SpaceUpdated",
             "Space",
             space.Id,
-            null,
+            currentUserId,
             null,
             "Update",
             "Space was updated.",
@@ -127,7 +138,8 @@ public sealed class SpaceService
                 space.OpeningTime,
                 space.ClosingTime,
                 space.TimeZoneId,
-                space.Status
+                space.Status,
+                space.UpdatedByUserId
             },
             null,
             cancellationToken);
@@ -139,6 +151,8 @@ public sealed class SpaceService
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId;
+
         var space = await _spaceRepository.GetByIdAsync(id, cancellationToken);
 
         if (space is null)
@@ -148,16 +162,18 @@ public sealed class SpaceService
         {
             space.Name,
             space.Status,
-            space.IsDeleted
+            space.IsDeleted,
+            space.DeletedAt,
+            space.DeletedByUserId
         };
 
-        space.Delete();
+        space.Delete(currentUserId);
 
         await _auditLogger.LogAsync(
             "SpaceDeleted",
             "Space",
             space.Id,
-            null,
+            currentUserId,
             null,
             "Delete",
             "Space was logically deleted.",
@@ -167,7 +183,8 @@ public sealed class SpaceService
                 space.Name,
                 space.Status,
                 space.IsDeleted,
-                space.DeletedAt
+                space.DeletedAt,
+                space.DeletedByUserId
             },
             null,
             cancellationToken);

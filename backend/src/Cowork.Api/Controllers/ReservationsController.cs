@@ -1,8 +1,10 @@
 ﻿using Cowork.Application.Reservations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cowork.Api.Controllers;
 
+[Authorize(Roles = "Admin,Staff,Customer")]
 [ApiController]
 [Route("api/reservations")]
 public sealed class ReservationsController : ControllerBase
@@ -15,9 +17,19 @@ public sealed class ReservationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<ReservationDto>>> List(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<ReservationDto>>> List(
+        CancellationToken cancellationToken)
     {
         var result = await _reservationService.ListAsync(cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<ReservationDto>> GetById(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _reservationService.GetByIdAsync(id, cancellationToken);
         return Ok(result);
     }
 
@@ -32,10 +44,20 @@ public sealed class ReservationsController : ControllerBase
 
     [HttpPost("{id:guid}/cancel")]
     public async Task<ActionResult<ReservationDto>> Cancel(
-    Guid id,
-    CancellationToken cancellationToken)
+        Guid id,
+        CancellationToken cancellationToken)
     {
         var result = await _reservationService.CancelAsync(id, cancellationToken);
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "Admin,Staff")]
+    [HttpPost("{id:guid}/complete")]
+    public async Task<ActionResult<ReservationDto>> Complete(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _reservationService.CompleteAsync(id, cancellationToken);
         return Ok(result);
     }
 }

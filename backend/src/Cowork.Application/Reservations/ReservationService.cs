@@ -3,6 +3,7 @@ using Cowork.Application.Common.Exceptions;
 using Cowork.Application.Common.Interfaces;
 using Cowork.Application.Pricing;
 using Cowork.Domain.Entities;
+using Cowork.Domain.Enums;
 using System.Text.Json;
 
 namespace Cowork.Application.Reservations;
@@ -16,6 +17,7 @@ public sealed class ReservationService
     private readonly IReservationRepository _reservationRepository;
     private readonly IReservationCodeGenerator _reservationCodeGenerator;
     private readonly IAuditLogger _auditLogger;
+    private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly DynamicPricingCalculator _pricingCalculator;
     private readonly CancellationPolicyService _cancellationPolicyService;
@@ -26,6 +28,7 @@ public sealed class ReservationService
         IReservationRepository reservationRepository,
         IReservationCodeGenerator reservationCodeGenerator,
         IAuditLogger auditLogger,
+        ICurrentUserService currentUserService,
         IUnitOfWork unitOfWork,
         DynamicPricingCalculator pricingCalculator,
         CancellationPolicyService cancellationPolicyService)
@@ -35,6 +38,7 @@ public sealed class ReservationService
         _reservationRepository = reservationRepository;
         _reservationCodeGenerator = reservationCodeGenerator;
         _auditLogger = auditLogger;
+        _currentUserService = currentUserService;
         _unitOfWork = unitOfWork;
         _pricingCalculator = pricingCalculator;
         _cancellationPolicyService = cancellationPolicyService;
@@ -42,14 +46,61 @@ public sealed class ReservationService
 
     public async Task<IReadOnlyList<ReservationDto>> ListAsync(CancellationToken cancellationToken)
     {
-        var reservations = await _reservationRepository.ListAsync(cancellationToken);
+        var currentRole = _currentUserService.Role;
+        var currentCustomerId = _currentUserService.CustomerId;
+
+        IReadOnlyList<Reservation> reservations;
+
+        if (currentRole == AppUserRole.Customer)
+        {
+            if (currentCustomerId is null)
+                throw new BusinessRuleException("Customer account is not linked to a customer profile.");
+
+            reservations = await _reservationRepository.ListByCustomerIdAsync(
+                currentCustomerId.Value,
+                cancellationToken);
+        }
+        else
+        {
+            reservations = await _reservationRepository.ListAsync(cancellationToken);
+        }
+
         return reservations.Select(ToDto).ToList();
+    }
+
+    public async Task<ReservationDto> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var reservation = await _reservationRepository.GetByIdAsync(id, cancellationToken);
+
+        if (reservation is null)
+            throw new NotFoundException("Reservation was not found.");
+
+        EnsureReservationCanBeAccessed(reservation);
+
+        return ToDto(reservation);
     }
 
     public async Task<ReservationDto> CreateAsync(
         CreateReservationRequest request,
         CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId;
+        var currentCustomerId = _currentUserService.CustomerId;
+        var currentRole = _currentUserService.Role;
+
+        var customerId = request.CustomerId;
+
+        if (currentRole == AppUserRole.Customer)
+        {
+            if (currentCustomerId is null)
+                throw new BusinessRuleException("Customer account is not linked to a customer profile.");
+
+            customerId = currentCustomerId.Value;
+        }
+
+        if (customerId == Guid.Empty)
+            throw new BusinessRuleException("Customer id is required.");
+
         var space = await _spaceRepository.GetByIdAsync(request.SpaceId, cancellationToken);
 
         if (space is null)
@@ -58,7 +109,7 @@ public sealed class ReservationService
         if (!space.IsAvailableForReservation())
             throw new BusinessRuleException("The selected space is not available for reservations.");
 
-        var customer = await _customerRepository.GetByIdAsync(request.CustomerId, cancellationToken);
+        var customer = await _customerRepository.GetByIdAsync(customerId, cancellationToken);
 
         if (customer is null)
             throw new NotFoundException("Customer was not found.");
@@ -83,7 +134,7 @@ public sealed class ReservationService
             _reservationCodeGenerator.Generate(createdAt),
             space.Id,
             customer.Id,
-            null,
+            currentUserId,
             request.StartTime.ToUniversalTime(),
             request.EndTime.ToUniversalTime(),
             pricingResult.BaseAmount,
@@ -97,7 +148,7 @@ public sealed class ReservationService
             "ReservationCreated",
             "Reservation",
             reservation.Id,
-            null,
+            currentUserId,
             customer.Id,
             "Create",
             "Reservation was created.",
@@ -126,10 +177,14 @@ public sealed class ReservationService
         Guid id,
         CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId;
+
         var reservation = await _reservationRepository.GetByIdAsync(id, cancellationToken);
 
         if (reservation is null)
             throw new NotFoundException("Reservation was not found.");
+
+        EnsureReservationCanBeAccessed(reservation);
 
         var oldValues = new
         {
@@ -147,13 +202,14 @@ public sealed class ReservationService
 
         reservation.Cancel(
             refund.RefundAmount,
-            cancellationRequestedAt);
+            cancellationRequestedAt,
+            currentUserId);
 
         await _auditLogger.LogAsync(
             "ReservationCancelled",
             "Reservation",
             reservation.Id,
-            null,
+            currentUserId,
             reservation.CustomerId,
             "Cancel",
             "Reservation was cancelled.",
@@ -162,7 +218,8 @@ public sealed class ReservationService
             {
                 reservation.Status,
                 reservation.RefundAmount,
-                reservation.CancelledAt
+                reservation.CancelledAt,
+                reservation.CancelledByUserId
             },
             null,
             cancellationToken);
@@ -170,6 +227,66 @@ public sealed class ReservationService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return ToDto(reservation);
+    }
+
+    public async Task<ReservationDto> CompleteAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var currentUserId = _currentUserService.UserId;
+
+        var reservation = await _reservationRepository.GetByIdAsync(id, cancellationToken);
+
+        if (reservation is null)
+            throw new NotFoundException("Reservation was not found.");
+
+        var currentRole = _currentUserService.Role;
+
+        if (currentRole == AppUserRole.Customer)
+            throw new BusinessRuleException("Customers cannot complete reservations.");
+
+        var oldValues = new
+        {
+            reservation.Status,
+            reservation.CompletedAt
+        };
+
+        reservation.Complete(DateTimeOffset.UtcNow, currentUserId);
+
+        await _auditLogger.LogAsync(
+            "ReservationCompleted",
+            "Reservation",
+            reservation.Id,
+            currentUserId,
+            reservation.CustomerId,
+            "Complete",
+            "Reservation was completed.",
+            oldValues,
+            new
+            {
+                reservation.Status,
+                reservation.CompletedAt,
+                reservation.CompletedByUserId
+            },
+            null,
+            cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return ToDto(reservation);
+    }
+
+    private void EnsureReservationCanBeAccessed(Reservation reservation)
+    {
+        var currentRole = _currentUserService.Role;
+
+        if (currentRole != AppUserRole.Customer)
+            return;
+
+        var currentCustomerId = _currentUserService.CustomerId;
+
+        if (currentCustomerId is null || reservation.CustomerId != currentCustomerId.Value)
+            throw new BusinessRuleException("Reservation does not belong to the current customer.");
     }
 
     private static string BuildPricingBreakdown(PricingCalculationResult pricingResult)

@@ -22,6 +22,17 @@ public sealed class ReservationRepository : IReservationRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Reservation>> ListByCustomerIdAsync(
+        Guid customerId,
+        CancellationToken cancellationToken)
+    {
+        return await _dbContext.Reservations
+            .AsNoTracking()
+            .Where(x => x.CustomerId == customerId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Reservation?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         return await _dbContext.Reservations

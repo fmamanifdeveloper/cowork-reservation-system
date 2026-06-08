@@ -48,4 +48,28 @@ public sealed class Customer
     public Guid? DeletedByUserId { get; private set; }
 
     public int Version { get; private set; }
+
+    public void Update(
+        string fullName,
+        string? email,
+        string? phone,
+        string? documentNumber,
+        Guid? updatedByUserId = null)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
+            throw new ArgumentException("Customer full name is required.", nameof(fullName));
+
+        FullName = fullName.Trim();
+        Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+        Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
+        DocumentNumber = string.IsNullOrWhiteSpace(documentNumber) ? null : documentNumber.Trim();
+        UpdatedByUserId = updatedByUserId;
+    }
+
+    public void Delete(Guid? deletedByUserId = null)
+    {
+        IsDeleted = true;
+        DeletedAt = DateTimeOffset.UtcNow;
+        DeletedByUserId = deletedByUserId;
+    }
 }

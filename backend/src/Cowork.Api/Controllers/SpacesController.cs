@@ -1,8 +1,10 @@
 ﻿using Cowork.Application.Spaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cowork.Api.Controllers;
 
+[Authorize(Roles = "Admin,Staff")]
 [ApiController]
 [Route("api/spaces")]
 public sealed class SpacesController : ControllerBase
@@ -22,7 +24,9 @@ public sealed class SpacesController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<SpaceDto>> GetById(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<SpaceDto>> GetById(
+        Guid id,
+        CancellationToken cancellationToken)
     {
         var result = await _spaceService.GetByIdAsync(id, cancellationToken);
         return Ok(result);
@@ -48,7 +52,9 @@ public sealed class SpacesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete(
+        Guid id,
+        CancellationToken cancellationToken)
     {
         await _spaceService.DeleteAsync(id, cancellationToken);
         return NoContent();
