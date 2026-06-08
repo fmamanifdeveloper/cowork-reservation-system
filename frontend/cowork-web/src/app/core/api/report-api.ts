@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { API_BASE_URL } from './api-config';
+import { ReportsDashboard } from '@core/models/report';
 
 @Injectable({
   providedIn: 'root',
@@ -20,6 +21,6 @@ export class ReportApi {
       params['to'] = to;
     }
 
-    return this.http.get(this.baseUrl, { params });
+    return this.http.get<ReportsDashboard>(this.baseUrl, { params });
   }
 }

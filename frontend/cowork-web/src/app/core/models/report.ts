@@ -1,14 +1,27 @@
-export interface SpaceOccupancyReport {
-  spaceId: string;
-  spaceName: string;
-  occupancyRatePercentage: number;
-  income: number;
-}
-
-export interface ReportsResponse {
+export interface ReportsDashboard {
   from: string;
   to: string;
-  totalIncome: number;
-  mostDemandedHour: string | null;
-  spaces: SpaceOccupancyReport[];
+  totalReservations: number;
+  pendingReservations: number;
+  confirmedReservations: number;
+  cancelledReservations: number;
+  completedReservations: number;
+  totalRevenue: number;
+  totalRefundAmount: number;
+  mostReservedSpaceName: string | null;
+  mostDemandedHour: number | null;
+  spaces: SpaceReportItem[];
+  hourlyDemand: HourlyDemandItem[];
+}
+
+export interface SpaceReportItem {
+  spaceId: string;
+  spaceName: string;
+  reservationCount: number;
+  revenue: number;
+}
+
+export interface HourlyDemandItem {
+  hour: number;
+  reservationCount: number;
 }

@@ -1,0 +1,102 @@
+<section class="admin-page">
+    <div class="page-header">
+        <div>
+            <h1>Reportes</h1>
+            <p>Consulta indicadores administrativos por rango de fechas.</p>
+        </div>
+    </div>
+
+    <div class="filters panel">
+        <label>
+            Desde
+            <input type="datetime-local" name="from" [(ngModel)]="from" />
+        </label>
+
+        <label>
+            Hasta
+            <input type="datetime-local" name="to" [(ngModel)]="to" />
+        </label>
+
+        <div class="filter-actions">
+            <button type="button" (click)="loadReport()">Consultar</button>
+            <button type="button" class="secondary" (click)="clearFilters()">Limpiar</button>
+        </div>
+    </div>
+
+    @if (isLoading()) {
+    <div class="state-card">Cargando reporte...</div>
+    } @else if (report(); as data) {
+    <div class="metrics">
+        <article>
+            <span>Total reservas</span>
+            <strong>{{ data.totalReservations }}</strong>
+        </article>
+
+        <article>
+            <span>Ingresos</span>
+            <strong>{{ formatCurrency(data.totalRevenue) }}</strong>
+        </article>
+
+        <article>
+            <span>Reembolsos</span>
+            <strong>{{ formatCurrency(data.totalRefundAmount) }}</strong>
+        </article>
+
+        <article>
+            <span>Espacio top</span>
+            <strong>{{ data.mostReservedSpaceName || 'Sin datos' }}</strong>
+        </article>
+    </div>
+
+    <div class="reports-grid">
+        <section class="panel">
+            <h2>Reservas por espacio</h2>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Espacio</th>
+                            <th>Reservas</th>
+                            <th>Ingresos</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (space of data.spaces; track space.spaceId) {
+                        <tr>
+                            <td>{{ space.spaceName }}</td>
+                            <td>{{ space.reservationCount }}</td>
+                            <td>{{ formatCurrency(space.revenue) }}</td>
+                        </tr>
+                        } @empty {
+                        <tr>
+                            <td colspan="3">Sin datos.</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Demanda por hora</h2>
+
+            @for (hour of data.hourlyDemand; track hour.hour) {
+            <div class="hour-row">
+                <strong>{{ hour.hour.toString().padStart(2, '0') }}:00</strong>
+                <div class="bar">
+                    <span
+                        [style.width.%]="data.totalReservations > 0 ? (hour.reservationCount / data.totalReservations) * 100 : 0"></span>
+                </div>
+                <small>{{ hour.reservationCount }} reservas</small>
+            </div>
+            } @empty {
+            <p class="empty">Sin demanda registrada.</p>
+            }
+        </section>
+    </div>
+    } @else {
+    <div class="state-card">No hay datos disponibles.</div>
+    }
+</section>

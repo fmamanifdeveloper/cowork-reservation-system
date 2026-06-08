@@ -4,25 +4,92 @@
             <h1>Dashboard</h1>
             <p>Resumen general del sistema de reservas.</p>
         </div>
+
+        <button type="button" (click)="loadDashboard()">Actualizar</button>
     </div>
 
-    <div class="cards">
-        <article>
+    @if (isLoading()) {
+    <div class="state-card">Cargando dashboard...</div>
+    } @else if (dashboard(); as data) {
+    <div class="metric-grid">
+        <article class="metric-card">
             <span>Reservas</span>
-            <strong>Panel listo</strong>
-            <p>Luego conectaremos este resumen con el endpoint de reportes.</p>
+            <strong>{{ data.totalReservations }}</strong>
+            <p>Total registradas en el periodo.</p>
         </article>
 
-        <article>
-            <span>Espacios</span>
-            <strong>Administración</strong>
-            <p>Gestión de espacios disponible para administradores y personal interno.</p>
+        <article class="metric-card">
+            <span>Ingresos</span>
+            <strong>{{ formatCurrency(data.totalRevenue) }}</strong>
+            <p>Reservas no canceladas.</p>
         </article>
 
-        <article>
-            <span>Auditoría</span>
-            <strong>Trazabilidad</strong>
-            <p>Los eventos principales quedan registrados en el backend.</p>
+        <article class="metric-card">
+            <span>Canceladas</span>
+            <strong>{{ data.cancelledReservations }}</strong>
+            <p>Reservas anuladas.</p>
+        </article>
+
+        <article class="metric-card">
+            <span>Completadas</span>
+            <strong>{{ data.completedReservations }}</strong>
+            <p>Reservas finalizadas.</p>
         </article>
     </div>
+
+    <div class="dashboard-grid">
+        <article class="panel">
+            <h2>Resumen operativo</h2>
+
+            <div class="summary-list">
+                <div>
+                    <span>Confirmadas</span>
+                    <strong>{{ data.confirmedReservations }}</strong>
+                </div>
+
+                <div>
+                    <span>Pendientes</span>
+                    <strong>{{ data.pendingReservations }}</strong>
+                </div>
+
+                <div>
+                    <span>Reembolsos</span>
+                    <strong>{{ formatCurrency(data.totalRefundAmount) }}</strong>
+                </div>
+
+                <div>
+                    <span>Espacio más reservado</span>
+                    <strong>{{ data.mostReservedSpaceName || 'Sin datos' }}</strong>
+                </div>
+
+                <div>
+                    <span>Hora más demandada</span>
+                    <strong>{{ formatHour(data.mostDemandedHour) }}</strong>
+                </div>
+            </div>
+        </article>
+
+        <article class="panel">
+            <h2>Reservas por espacio</h2>
+
+            @for (space of data.spaces; track space.spaceId) {
+            <div class="bar-row">
+                <div>
+                    <strong>{{ space.spaceName }}</strong>
+                    <span>{{ space.reservationCount }} reservas · {{ formatCurrency(space.revenue) }}</span>
+                </div>
+
+                <div class="bar">
+                    <span
+                        [style.width.%]="data.totalReservations > 0 ? (space.reservationCount / data.totalReservations) * 100 : 0"></span>
+                </div>
+            </div>
+            } @empty {
+            <p class="empty">Sin reservas registradas.</p>
+            }
+        </article>
+    </div>
+    } @else {
+    <div class="state-card">No hay datos disponibles.</div>
+    }
 </section>

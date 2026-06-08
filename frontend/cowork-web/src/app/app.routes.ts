@@ -85,7 +85,8 @@ export const routes: Routes = [
             },
             {
                 path: 'reports',
-                component: DashboardPage,
+                loadComponent: () =>
+                    import('./features/reports/reports-page/reports-page').then(m => m.ReportsPage),
                 canActivate: [roleGuard],
                 data: {
                     roles: ['Admin', 'Staff']
@@ -93,7 +94,8 @@ export const routes: Routes = [
             },
             {
                 path: 'audit-logs',
-                component: DashboardPage,
+                loadComponent: () =>
+                    import('./features/audit-logs/audit-logs-page/audit-logs-page').then(m => m.AuditLogsPage),
                 canActivate: [roleGuard],
                 data: {
                     roles: ['Admin', 'Staff']

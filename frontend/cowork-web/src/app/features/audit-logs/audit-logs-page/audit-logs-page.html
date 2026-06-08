@@ -1,0 +1,58 @@
+<section class="admin-page">
+    <div class="page-header">
+        <div>
+            <h1>Auditoría</h1>
+            <p>Eventos funcionales registrados por el sistema.</p>
+        </div>
+
+        <button type="button" (click)="loadAuditLogs()">Actualizar</button>
+    </div>
+
+    <div class="panel">
+        @if (isLoading()) {
+        <div class="empty-state">Cargando auditoría...</div>
+        } @else {
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Evento</th>
+                        <th>Entidad</th>
+                        <th>Acción</th>
+                        <th>Descripción</th>
+                        <th>Actor</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (log of auditLogs(); track log.id) {
+                    <tr>
+                        <td>{{ formatDate(log.createdAt) }}</td>
+                        <td>
+                            <strong>{{ log.eventType }}</strong>
+                        </td>
+                        <td>
+                            {{ log.entityType }}
+                            <small>{{ log.entityId || 'Sin entidad' }}</small>
+                        </td>
+                        <td>
+                            <span class="action">{{ log.action }}</span>
+                        </td>
+                        <td>{{ log.description }}</td>
+                        <td>
+                            <small>Usuario: {{ log.actorUserId || 'N/A' }}</small>
+                            <small>Cliente: {{ log.actorCustomerId || 'N/A' }}</small>
+                        </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                        <td colspan="6">No hay eventos de auditoría.</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+    </div>
+</section>

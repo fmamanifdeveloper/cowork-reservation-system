@@ -1,0 +1,90 @@
+.admin-page {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+
+    h1 {
+        margin: 0;
+        color: #111827;
+        font-size: 2rem;
+    }
+
+    p {
+        margin: 0.35rem 0 0;
+        color: #6b7280;
+    }
+
+    button {
+        padding: 0.7rem 1rem;
+        border: 0;
+        border-radius: 12px;
+        background: #eef2ff;
+        color: #1d4ed8;
+        font-weight: 900;
+        cursor: pointer;
+    }
+}
+
+.panel {
+    min-width: 0;
+    padding: 1.25rem;
+    border-radius: 22px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+        text-align: left;
+        color: #6b7280;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+    }
+
+    th,
+    td {
+        padding: 0.85rem;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: top;
+    }
+
+    small {
+        display: block;
+        margin-top: 0.2rem;
+        color: #6b7280;
+    }
+}
+
+.action {
+    display: inline-flex;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #1d4ed8;
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.empty-state {
+    padding: 1rem;
+    color: #6b7280;
+}
+
+@media (max-width: 640px) {
+    .page-header {
+        flex-direction: column;
+    }
+}
