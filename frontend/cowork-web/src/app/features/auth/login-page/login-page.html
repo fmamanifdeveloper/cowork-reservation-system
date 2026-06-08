@@ -32,24 +32,33 @@
                 </button>
             </form>
 
+            @if (showDemoCredentials) {
             <div class="demo-users">
-                <strong>Usuarios demo</strong>
+                <h3>Usuarios demo</h3>
 
                 <div>
                     <span>admin</span>
-                    <small>Admin123!</small>
+                    <span>Admin123!</span>
                 </div>
 
                 <div>
                     <span>staff01</span>
-                    <small>Admin123!</small>
+                    <span>Admin123!</span>
                 </div>
 
                 <div>
                     <span>juan.perez</span>
-                    <small>Admin123!</small>
+                    <span>Admin123!</span>
                 </div>
             </div>
+            } @else {
+            <div class="access-note">
+                <strong>Acceso privado</strong>
+                <p>
+                    Esta sección está reservada para personal autorizado del sistema.
+                </p>
+            </div>
+            }
         </div>
     </div>
 </section>

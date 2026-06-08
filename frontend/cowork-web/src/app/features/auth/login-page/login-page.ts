@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthApi } from '@core/auth/auth-api';
 import { AuthStore } from '@core/auth/auth-store';
 import { NotificationStore } from '@core/notifications/notification-store';
+import { environment } from '@env/environment';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -17,7 +18,8 @@ export class LoginPage {
   private readonly authStore = inject(AuthStore);
   private readonly notificationStore = inject(NotificationStore);
   private readonly router = inject(Router);
-
+  readonly showDemoCredentials = environment.showDemoCredentials;
+  
   readonly isLoading = signal(false);
 
   username = 'admin';

@@ -141,3 +141,26 @@
         padding: 2rem;
     }
 }
+
+.access-note {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    background: #eff6ff;
+    color: #1e3a8a;
+
+    strong {
+        font-size: 0.95rem;
+        font-weight: 650;
+    }
+
+    p {
+        margin: 0;
+        color: #475569;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+}
