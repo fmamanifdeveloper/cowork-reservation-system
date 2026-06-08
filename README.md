@@ -2,28 +2,64 @@
 
 Sistema full stack para la gestión de reservas de espacios de coworking.
 
-El proyecto permite administrar espacios, clientes, reservas, tarifas dinámicas, autenticación con JWT, roles, auditoría de negocio, reportes administrativos y prevención de reservas solapadas mediante restricciones a nivel de base de datos.
+El proyecto permite consultar espacios disponibles, registrar reservas públicas, calcular precios dinámicos, administrar espacios, clientes y reservas, controlar accesos por rol, generar reportes administrativos y auditar eventos funcionales del sistema.
+
+---
+
+## Tabla de contenido
+
+- [Funcionalidades principales](#funcionalidades-principales)
+- [Tecnologías utilizadas](#tecnologías-utilizadas)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Arquitectura general](#arquitectura-general)
+- [Requisitos previos](#requisitos-previos)
+- [Ejecución local](#ejecución-local)
+- [Usuarios demo](#usuarios-demo)
+- [Rutas principales](#rutas-principales)
+- [Endpoints principales](#endpoints-principales)
+- [Base de datos](#base-de-datos)
+- [Reglas de negocio](#reglas-de-negocio)
+- [Pruebas](#pruebas)
+- [Colección manual de requests](#colección-manual-de-requests)
+- [Documentación adicional](#documentación-adicional)
+- [Mejoras futuras](#mejoras-futuras)
 
 ---
 
 ## Funcionalidades principales
 
-- Portal público para consultar espacios disponibles.
-- Creación de reservas públicas sin login.
-- Cálculo de precio estimado antes de reservar.
-- Autenticación JWT.
-- Roles `Admin`, `Staff` y `Customer`.
-- Panel interno para administración.
+### Portal público
+
+- Visualización de espacios disponibles.
+- Selección de espacio por capacidad, tarifa y horario.
+- Registro de reserva pública tipo invitado.
+- Cálculo previo del precio antes de confirmar.
+- Confirmación visual con código de reserva.
+- Indicaciones claras para el cliente después de reservar.
+
+### Panel interno
+
+- Login con JWT.
+- Control de acceso por roles.
+- Dashboard administrativo.
 - Gestión de espacios.
 - Gestión de clientes.
 - Gestión de reservas.
-- Cancelación de reservas con política de reembolso.
+- Cancelación de reservas.
 - Finalización de reservas.
 - Reportes administrativos.
-- Auditoría de eventos funcionales.
-- Prevención de overbooking.
-- Pruebas unitarias e integración.
-- Colección manual de requests HTTP para validación de API.
+- Auditoría funcional.
+
+### Seguridad y reglas
+
+- Autenticación JWT.
+- Roles `Admin`, `Staff` y `Customer`.
+- Guards en frontend.
+- Interceptor para enviar token JWT.
+- Validación de horarios en bloques de 30 minutos.
+- Prevención de reservas solapadas.
+- Manejo de errores HTTP.
+- Auditoría de acciones relevantes.
 
 ---
 
@@ -45,8 +81,8 @@ El proyecto permite administrar espacios, clientes, reservas, tarifas dinámicas
 - Angular
 - TypeScript
 - SCSS
-- Angular Signals
 - Angular Router
+- Angular Signals
 - HTTP Interceptors
 - Route Guards
 
@@ -57,6 +93,7 @@ El proyecto permite administrar espacios, clientes, reservas, tarifas dinámicas
 - Constraints
 - Índices
 - Seeds
+- Comentarios técnicos
 - Auditoría en tabla `audit_logs`
 
 ---
@@ -71,6 +108,7 @@ cowork-reservation-system/
 │   │   ├── Cowork.Application/
 │   │   ├── Cowork.Domain/
 │   │   └── Cowork.Infrastructure/
+│   │
 │   └── tests/
 │       ├── Cowork.UnitTests/
 │       └── Cowork.IntegrationTests/
@@ -99,9 +137,13 @@ cowork-reservation-system/
 
 ---
 
-## Arquitectura del backend
+## Arquitectura general
 
-El backend está organizado por capas:
+El proyecto está separado en backend, frontend, base de datos y documentación.
+
+### Backend
+
+El backend usa una arquitectura por capas:
 
 ```text
 Cowork.Api
@@ -114,82 +156,176 @@ Cowork.Infrastructure
 
 Contiene:
 
-- Controllers
-- Configuración HTTP
-- Middleware de errores
-- Autenticación JWT
-- Configuración de CORS
-- Scalar/OpenAPI
-- Current user context
+- Controllers REST.
+- Configuración de autenticación JWT.
+- Configuración de CORS.
+- Middleware global de errores.
+- Configuración de OpenAPI/Scalar.
+- Servicio de usuario actual.
 
 ### `Cowork.Application`
 
 Contiene:
 
-- Casos de uso
-- Servicios de aplicación
-- DTOs
-- Interfaces
-- Reglas de negocio coordinadas
-- Servicios de pricing, cancelación, auditoría y reportes
+- Servicios de aplicación.
+- Casos de uso.
+- DTOs.
+- Interfaces.
+- Reglas coordinadas de negocio.
+- Cálculo de precios.
+- Política de cancelación.
+- Auditoría funcional.
+- Reportes.
 
 ### `Cowork.Domain`
 
 Contiene:
 
-- Entidades
-- Enums
-- Reglas base del dominio
-- Validaciones internas de entidades
+- Entidades.
+- Enums.
+- Reglas reutilizables del dominio.
+- Validaciones internas de entidades.
 
 ### `Cowork.Infrastructure`
 
 Contiene:
 
-- DbContext
-- Configuraciones EF Core
-- Repositorios
-- Unit of Work
-- JWT token generator
-- Password hasher
-- Implementaciones de infraestructura
+- DbContext.
+- Configuraciones de Entity Framework Core.
+- Repositorios.
+- Unit of Work.
+- Generación de JWT.
+- Hashing de contraseñas.
+- Acceso a PostgreSQL.
 
 ---
 
-## Base de datos
+## Requisitos previos
 
-La base de datos se inicializa desde scripts SQL ubicados en:
+Para ejecutar el proyecto localmente se requiere:
+
+- Docker Desktop.
+- .NET SDK 10.
+- Node.js.
+- npm.
+- Git.
+
+Opcional:
+
+- Visual Studio 2026, Visual Studio Code o Rider.
+- Extensión REST Client para probar `docs/requests/requests.http`.
+
+---
+
+## Ejecución local
+
+### 1. Clonar el repositorio
+
+```bash
+git clone <URL_DEL_REPOSITORIO>
+cd cowork-reservation-system
+```
+
+---
+
+### 2. Levantar PostgreSQL con Docker
+
+Desde la raíz del repositorio:
+
+```bash
+docker compose up -d
+```
+
+Esto crea el contenedor PostgreSQL y ejecuta automáticamente los scripts ubicados en:
 
 ```text
 database/
 ```
 
-Incluye:
+La base de datos queda inicializada con catálogos, usuarios demo, clientes demo, espacios demo y datos necesarios para la ejecución local.
 
-- Catálogos de roles y estados.
-- Usuarios demo.
-- Clientes demo.
-- Espacios demo.
-- Reservas.
-- Auditoría.
-- Índices.
-- Constraints.
-- Comentarios técnicos.
-- Prevención de reservas solapadas.
+---
 
-Más detalle en:
+### 3. Verificar contenedor de PostgreSQL
 
-```text
-database/README.md
+```bash
+docker ps
+```
+
+También se puede validar la creación de tablas con:
+
+```bash
+docker exec -it cowork-postgres psql -U cowork_user -d cowork_reservations -c "\dt"
 ```
 
 ---
 
-## Autenticación y roles
+### 4. Ejecutar backend
 
-El sistema usa JWT Bearer Authentication.
+Desde la raíz del repositorio:
 
-Usuarios demo:
+```bash
+dotnet run --project backend/src/Cowork.Api/Cowork.Api.csproj
+```
+
+La API queda disponible en:
+
+```text
+https://localhost:7011
+```
+
+Documentación interactiva:
+
+```text
+https://localhost:7011/scalar/v1
+```
+
+OpenAPI JSON:
+
+```text
+https://localhost:7011/openapi/v1.json
+```
+
+---
+
+### 5. Ejecutar frontend
+
+Desde la raíz del repositorio:
+
+```bash
+cd frontend/cowork-web
+npm install
+npm start
+```
+
+Si no existe script `start`, usar:
+
+```bash
+npx ng serve
+```
+
+El frontend queda disponible en:
+
+```text
+http://localhost:4200
+```
+
+---
+
+## Reiniciar base de datos local
+
+Para eliminar el volumen y reconstruir la base de datos desde cero:
+
+```bash
+docker compose down --volumes --remove-orphans
+docker compose up -d
+```
+
+Esto borra los datos locales y vuelve a ejecutar los scripts SQL.
+
+---
+
+## Usuarios demo
 
 | Usuario | Contraseña | Rol |
 |---|---|---|
@@ -197,23 +333,75 @@ Usuarios demo:
 | `staff01` | `Admin123!` | Staff |
 | `juan.perez` | `Admin123!` | Customer |
 
-> Credenciales solo para entorno local de desarrollo.
+Las credenciales demo son solo para entorno local de desarrollo.
 
-### Permisos por rol
+---
+
+## Rutas principales
+
+### Portal público
+
+```text
+/public/spaces
+/public/reservation
+```
+
+### Autenticación
+
+```text
+/auth/login
+```
+
+### Panel interno
+
+```text
+/admin/dashboard
+/admin/spaces
+/admin/customers
+/admin/reservations
+/admin/reports
+/admin/audit-logs
+/forbidden
+```
+
+---
+
+## Permisos por rol
 
 | Funcionalidad | Admin | Staff | Customer |
 |---|---:|---:|---:|
 | Login | Sí | Sí | Sí |
-| Ver espacios públicos | Sí | Sí | Sí |
-| Crear reserva pública | Sí | Sí | Sí |
+| Portal público | Sí | Sí | Sí |
+| Ver dashboard | Sí | Sí | No |
 | Gestionar espacios | Sí | Sí | No |
 | Gestionar clientes | Sí | Sí | No |
 | Ver reservas | Todas | Todas | Solo propias |
-| Crear reserva interna | Sí | Sí | Sí |
-| Cancelar reserva | Sí | Sí | Solo propias |
-| Completar reserva | Sí | Sí | No |
+| Crear reservas internas | Sí | Sí | Sí |
+| Cancelar reservas | Sí | Sí | Solo propias |
+| Completar reservas | Sí | Sí | No |
 | Ver reportes | Sí | Sí | No |
 | Ver auditoría | Sí | Sí | No |
+
+---
+
+## Flujo público de reserva
+
+El portal público permite crear reservas como invitado.
+
+Flujo:
+
+```text
+1. El cliente selecciona un espacio.
+2. Ingresa sus datos de contacto.
+3. Define inicio y fin de la reserva.
+4. Calcula el precio estimado.
+5. Confirma la reserva.
+6. El sistema muestra un código de reserva.
+```
+
+Después de crear la reserva, el cliente debe guardar su código. Ese código permite que el personal ubique la reserva desde el panel interno.
+
+Actualmente el portal público no crea automáticamente una cuenta de usuario para el cliente. La gestión interna queda a cargo de `Admin` y `Staff`.
 
 ---
 
@@ -264,12 +452,6 @@ POST /api/reservations/{id}/cancel
 POST /api/reservations/{id}/complete
 ```
 
-### Auditoría
-
-```http
-GET /api/audit-logs
-```
-
 ### Reportes
 
 ```http
@@ -277,99 +459,83 @@ GET /api/reports
 GET /api/reports?from=2026-06-01T00:00:00Z&to=2026-06-30T23:59:59Z
 ```
 
+### Auditoría
+
+```http
+GET /api/audit-logs
+```
+
 ---
 
-## Frontend
+## Base de datos
 
-El frontend está desarrollado en Angular y consume los endpoints públicos e internos del backend.
-
-Incluye:
-
-- Portal público de espacios.
-- Reserva pública.
-- Preview de precio.
-- Login.
-- Panel administrativo.
-- Menú responsive.
-- Guards por autenticación y rol.
-- Interceptor JWT.
-- Gestión de espacios.
-- Gestión de clientes.
-- Gestión de reservas.
-- Dashboard administrativo.
-- Reportes.
-- Auditoría.
-- Página de acceso restringido.
-
-Rutas principales:
+La base de datos se inicializa desde scripts SQL ubicados en:
 
 ```text
-/public/spaces
-/public/reservation
-/auth/login
-/admin/dashboard
-/admin/spaces
-/admin/customers
-/admin/reservations
-/admin/reports
-/admin/audit-logs
-/forbidden
+database/
 ```
+
+Archivos principales:
+
+| Archivo | Descripción |
+|---|---|
+| `000_extensions.sql` | Extensiones y funciones compartidas |
+| `001_catalogs.sql` | Catálogos base |
+| `002_schema.sql` | Tablas principales |
+| `003_indexes_constraints.sql` | Índices, constraints y triggers |
+| `004_seed.sql` | Datos iniciales y usuarios demo |
+| `005_comments.sql` | Comentarios técnicos de base de datos |
 
 Más detalle en:
 
 ```text
-frontend/cowork-web/README.md
+database/README.md
 ```
 
 ---
 
-## Concurrencia y overbooking
+## Modelo general de datos
 
-La prevención de reservas solapadas se garantiza principalmente a nivel de base de datos mediante una `exclusion constraint` de PostgreSQL.
+Entidades principales:
 
-Esto evita que dos solicitudes simultáneas puedan confirmar reservas para el mismo espacio y horario.
+- `app_users`
+- `customers`
+- `spaces`
+- `reservations`
+- `audit_logs`
 
-Cuando ocurre un conflicto, la API responde:
+Catálogos principales:
 
-```http
-409 Conflict
-```
-
-Respuesta esperada:
-
-```json
-{
-  "status": 409,
-  "error": "Reservation conflict",
-  "message": "The selected time slot is already reserved for this space."
-}
-```
-
-La estrategia combina:
-
-- Restricción fuerte en PostgreSQL.
-- Manejo de excepción en backend.
-- Respuesta HTTP consistente.
-- Prueba de integración para validar concurrencia real.
+- `app_user_roles`
+- `app_user_statuses`
+- `space_statuses`
+- `reservation_statuses`
 
 ---
 
-## Tarifas dinámicas
+## Reglas de negocio
 
-El motor de tarifas calcula el precio de una reserva aplicando reglas en orden:
+### Reservas
 
-1. Precio base = tarifa por hora × duración.
-2. Recargo por hora pico.
-3. Recargo por fin de semana.
-4. Descuento por reserva larga.
-5. Descuento por reserva anticipada.
+- La fecha/hora de inicio debe ser menor que la fecha/hora de fin.
+- La reserva debe estar dentro del horario de atención del espacio.
+- La reserva debe iniciar y finalizar el mismo día local.
+- La duración mínima es de 30 minutos.
+- La duración máxima es de 8 horas.
+- Los horarios deben usar bloques de 30 minutos.
+- No se permiten reservas solapadas para el mismo espacio.
+- No se pueden reservar espacios inactivos o en mantenimiento.
 
-El resultado se guarda en la reserva mediante `pricing_breakdown`, permitiendo trazabilidad del cálculo aplicado.
+### Espacios
 
----
+- El nombre es obligatorio.
+- La capacidad debe ser mayor a cero.
+- La tarifa por hora debe ser mayor a cero.
+- La hora de apertura debe ser menor que la hora de cierre.
+- Los horarios de apertura y cierre deben usar bloques de 30 minutos.
+- La zona horaria es obligatoria.
 
-## Política de cancelación
+### Cancelaciones
 
 La política de cancelación calcula el reembolso según la anticipación:
 
@@ -382,9 +548,47 @@ La política de cancelación calcula el reembolso según la anticipación:
 
 ---
 
+## Tarifas dinámicas
+
+El motor de tarifas aplica reglas en orden:
+
+1. Precio base = tarifa por hora × duración.
+2. Recargo por hora pico.
+3. Recargo por fin de semana.
+4. Descuento por reserva larga.
+5. Descuento por reserva anticipada.
+
+El resultado se almacena en la reserva mediante `pricing_breakdown`, permitiendo trazabilidad del cálculo aplicado.
+
+---
+
+## Prevención de overbooking
+
+El sistema previene reservas solapadas para el mismo espacio y horario.
+
+La estrategia combina:
+
+- Validaciones en backend.
+- Restricciones a nivel de base de datos.
+- Manejo de conflicto en API.
+- Respuesta HTTP `409 Conflict`.
+- Prueba de integración para concurrencia.
+
+Ejemplo de respuesta:
+
+```json
+{
+  "status": 409,
+  "error": "Reservation conflict",
+  "message": "The selected time slot is already reserved for this space."
+}
+```
+
+---
+
 ## Auditoría
 
-La auditoría de negocio se almacena en la tabla:
+La auditoría funcional se almacena en:
 
 ```text
 audit_logs
@@ -394,17 +598,17 @@ Registra eventos como:
 
 - Login exitoso.
 - Login fallido.
-- Creación de cliente.
-- Actualización de cliente.
-- Eliminación lógica de cliente.
 - Creación de espacio.
 - Actualización de espacio.
 - Eliminación lógica de espacio.
+- Creación de cliente.
+- Actualización de cliente.
+- Eliminación lógica de cliente.
 - Creación de reserva.
 - Cancelación de reserva.
 - Finalización de reserva.
 
-La auditoría permite responder preguntas como:
+La auditoría permite identificar:
 
 - Qué acción ocurrió.
 - Sobre qué entidad ocurrió.
@@ -416,7 +620,7 @@ La auditoría permite responder preguntas como:
 
 ## Reportes
 
-El sistema expone un dashboard administrativo con:
+El dashboard administrativo muestra indicadores como:
 
 - Total de reservas.
 - Reservas pendientes.
@@ -438,68 +642,9 @@ GET /api/reports
 
 ---
 
-## Ejecución local
+## Pruebas
 
-### 1. Levantar PostgreSQL
-
-Desde la raíz del repositorio:
-
-```bash
-docker compose up -d
-```
-
-Esto crea el contenedor PostgreSQL y ejecuta los scripts de inicialización de la carpeta `database/`.
-
-### 2. Ejecutar backend
-
-```bash
-dotnet run --project backend/src/Cowork.Api/Cowork.Api.csproj
-```
-
-Por defecto, la API se ejecuta en:
-
-```text
-https://localhost:7011
-```
-
-Scalar/OpenAPI:
-
-```text
-https://localhost:7011/scalar/v1
-```
-
-### 3. Ejecutar frontend
-
-```bash
-cd frontend/cowork-web
-npm install
-ng serve
-```
-
-Abrir:
-
-```text
-http://localhost:4200
-```
-
----
-
-## Reiniciar base de datos local
-
-Para restaurar la base al estado inicial del seed:
-
-```bash
-docker compose down --volumes --remove-orphans
-docker compose up -d
-```
-
-Esto elimina el volumen local y vuelve a ejecutar los scripts SQL.
-
----
-
-## Pruebas automatizadas
-
-Ejecutar pruebas:
+Para ejecutar las pruebas:
 
 ```bash
 cd backend
@@ -509,16 +654,36 @@ dotnet test
 Las pruebas cubren:
 
 - Motor de tarifas dinámicas.
-- Política de cancelaciones.
-- Concurrencia real en creación de reservas.
+- Política de cancelación.
+- Concurrencia en creación de reservas.
 - Prevención de overbooking.
 - Respuesta esperada `409 Conflict`.
 
 ---
 
+## Validación de compilación
+
+### Backend
+
+```bash
+cd backend
+dotnet build
+dotnet test
+```
+
+### Frontend
+
+```bash
+cd frontend/cowork-web
+npm install
+npx ng build
+```
+
+---
+
 ## Colección manual de requests
 
-La colección manual de pruebas está en:
+La colección manual está en:
 
 ```text
 docs/requests/requests.http
@@ -540,43 +705,73 @@ Incluye pruebas para:
 - Reportes.
 - Restricciones por rol.
 
-Este archivo puede ejecutarse con:
+Puede ejecutarse con:
 
-- VS Code + extensión REST Client.
+- Visual Studio Code + REST Client.
 - Visual Studio.
 - Rider.
 
 ---
 
-## Validaciones principales
-
-El sistema valida:
-
-- Espacio obligatorio.
-- Cliente obligatorio.
-- Fecha/hora de inicio menor que fecha/hora de fin.
-- Duración mínima de reserva.
-- Duración máxima de reserva.
-- Horario dentro de apertura y cierre del espacio.
-- Espacio activo para permitir reservas.
-- Usuario autenticado para endpoints internos.
-- Rol permitido para acciones administrativas.
-- Prevención de reservas solapadas.
-
----
-
 ## Manejo de errores
 
-La API maneja errores de forma consistente:
+La API responde con códigos HTTP consistentes:
 
-| Caso | HTTP |
+| Caso | Código |
 |---|---:|
 | Datos inválidos | 400 |
 | No autenticado | 401 |
 | Sin permisos | 403 |
 | Recurso no encontrado | 404 |
-| Conflicto de reserva / duplicado | 409 |
+| Conflicto de reserva o duplicado | 409 |
 | Error inesperado | 500 |
+
+El frontend muestra mensajes visuales en español para el usuario final.
+
+---
+
+## Configuración del frontend
+
+La URL base de la API se configura en:
+
+```text
+frontend/cowork-web/src/environments/environment.ts
+```
+
+Ejemplo local:
+
+```ts
+export const environment = {
+  production: false,
+  apiBaseUrl: 'https://localhost:7011/api'
+};
+```
+
+---
+
+## Configuración de Docker
+
+El archivo:
+
+```text
+docker-compose.yml
+```
+
+levanta PostgreSQL en el puerto local:
+
+```text
+5433
+```
+
+Credenciales locales:
+
+```text
+Database: cowork_reservations
+User: cowork_user
+Password: cowork_password
+```
+
+Estas credenciales son solo para entorno local.
 
 ---
 
@@ -588,40 +783,84 @@ frontend/cowork-web/README.md
 docs/requests/requests.http
 docs/technical/local-setup.md
 docs/technical/future-improvements.md
-docs/diagrams/mermaid/database-er.md
+docs/diagrams/
+```
+
+---
+
+## Comandos rápidos
+
+Levantar base de datos:
+
+```bash
+docker compose up -d
+```
+
+Ejecutar backend:
+
+```bash
+dotnet run --project backend/src/Cowork.Api/Cowork.Api.csproj
+```
+
+Ejecutar frontend:
+
+```bash
+cd frontend/cowork-web
+npm install
+npm start
+```
+
+Ejecutar pruebas:
+
+```bash
+cd backend
+dotnet test
+```
+
+Reiniciar base de datos:
+
+```bash
+docker compose down --volumes --remove-orphans
+docker compose up -d
 ```
 
 ---
 
 ## Mejoras futuras
 
-Algunas mejoras previstas:
+Mejoras previstas para una siguiente versión:
 
+- Registro de cuenta para clientes.
+- Consulta pública de reserva por código y correo.
+- Envío de confirmación por email.
 - Refresh token.
-- Serilog para logs técnicos.
+- Recuperación de contraseña.
+- Pagos en línea.
+- Serilog para logging técnico.
 - Dapper para reportes complejos.
 - Vistas SQL para dashboards avanzados.
 - Endpoints PATCH para actualizaciones parciales.
-- Componentes reutilizables en frontend.
-- Manejo de errores frontend por código de negocio.
 - Tests end-to-end.
 - CI/CD.
 - Despliegue cloud.
 
 ---
 
-## Estado del proyecto
+## Estado actual
 
-Estado actual:
+Estado del proyecto:
 
-- Backend funcional.
 - Base de datos inicializable con Docker.
-- Autenticación JWT implementada.
+- Backend funcional.
+- Frontend funcional.
+- Portal público implementado.
+- Login JWT implementado.
 - Roles implementados.
-- Endpoints públicos implementados.
-- Endpoints administrativos implementados.
-- Auditoría implementada.
+- Panel interno implementado.
+- Gestión de espacios implementada.
+- Gestión de clientes implementada.
+- Gestión de reservas implementada.
 - Reportes implementados.
-- Frontend funcional con Angular.
+- Auditoría implementada.
 - Pruebas unitarias e integración disponibles.
-- Colección HTTP documentada para validación manual.
+- Colección HTTP documentada.
