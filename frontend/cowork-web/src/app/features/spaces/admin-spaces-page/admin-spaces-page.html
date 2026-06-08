@@ -129,19 +129,27 @@
             <div class="form-row">
                 <label>
                     Apertura
-                    <input type="time" name="openingTime" [(ngModel)]="form.openingTime" />
+                    <input type="time" name="openingTime" [(ngModel)]="form.openingTime" step="1800" />
 
                     @if (isOpeningTimeInvalid()) {
                     <small class="field-error">La hora de apertura es obligatoria.</small>
+                    }
+
+                    @if (isOpeningTimeStepInvalid()) {
+                    <small class="field-error">La hora debe estar en bloques de 30 minutos.</small>
                     }
                 </label>
 
                 <label>
                     Cierre
-                    <input type="time" name="closingTime" [(ngModel)]="form.closingTime" />
+                    <input type="time" name="closingTime" [(ngModel)]="form.closingTime" step="1800" />
 
                     @if (isClosingTimeInvalid()) {
                     <small class="field-error">La hora de cierre es obligatoria.</small>
+                    }
+
+                    @if (isClosingTimeStepInvalid()) {
+                    <small class="field-error">La hora debe estar en bloques de 30 minutos.</small>
                     }
 
                     @if (isScheduleInvalid()) {

@@ -195,6 +195,30 @@ export class AdminSpacesPage {
     return this.wasSubmitted() && !this.form.timeZoneId.trim();
   }
 
+  isOpeningTimeStepInvalid(): boolean {
+    return (
+      this.wasSubmitted() &&
+      !!this.form.openingTime &&
+      !this.hasAllowedTimeStep(this.form.openingTime)
+    );
+  }
+
+  isClosingTimeStepInvalid(): boolean {
+    return (
+      this.wasSubmitted() &&
+      !!this.form.closingTime &&
+      !this.hasAllowedTimeStep(this.form.closingTime)
+    );
+  }
+
+  private hasAllowedTimeStep(value: string): boolean {
+    const timePart = value.length >= 5 ? value.substring(0, 5) : value;
+    const minuteText = timePart.split(':')[1];
+    const minutes = Number(minuteText);
+
+    return Number.isInteger(minutes) && minutes % 30 === 0;
+  }
+
   private validateForm(): boolean {
     if (!this.form.name.trim()) {
       this.notificationStore.warning('Ingresa el nombre del espacio.');
@@ -213,6 +237,14 @@ export class AdminSpacesPage {
 
     if (!this.form.openingTime || !this.form.closingTime) {
       this.notificationStore.warning('Ingresa el horario de apertura y cierre.');
+      return false;
+    }
+
+    if (
+      !this.hasAllowedTimeStep(this.form.openingTime) ||
+      !this.hasAllowedTimeStep(this.form.closingTime)
+    ) {
+      this.notificationStore.warning('Los horarios deben estar en bloques de 30 minutos.');
       return false;
     }
 
