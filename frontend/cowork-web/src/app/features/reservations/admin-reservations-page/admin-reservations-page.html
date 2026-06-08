@@ -131,7 +131,7 @@
         <div class="modal-body">
             <label>
                 Espacio
-                <select name="spaceId" [(ngModel)]="form.spaceId">
+                <select name="spaceId" [(ngModel)]="form.spaceId" (ngModelChange)="onReservationInputChanged()">
                     @for (space of spaces(); track space.id) {
                     <option [value]="space.id">
                         {{ space.name }} · S/ {{ space.baseHourlyRate }} por hora
@@ -164,7 +164,8 @@
             <div class="form-row">
                 <label>
                     Inicio
-                    <input type="datetime-local" name="startTime" [(ngModel)]="form.startTime" step="1800" />
+                    <input type="datetime-local" name="startTime" [(ngModel)]="form.startTime"
+                        (ngModelChange)="onReservationInputChanged()" step="1800" />
 
                     @if (isStartTimeInvalid()) {
                     <small class="field-error">La fecha de inicio es obligatoria.</small>
@@ -177,7 +178,8 @@
 
                 <label>
                     Fin
-                    <input type="datetime-local" name="endTime" [(ngModel)]="form.endTime" step="1800" />
+                    <input type="datetime-local" name="endTime" [(ngModel)]="form.endTime"
+                        (ngModelChange)="onReservationInputChanged()" step="1800" />
 
                     @if (isEndTimeInvalid()) {
                     <small class="field-error">La fecha de fin es obligatoria.</small>
@@ -192,6 +194,73 @@
                     }
                 </label>
             </div>
+
+            <div class="availability-note">
+                <span>La disponibilidad y el precio se validan automáticamente antes de crear la reserva.</span>
+            </div>
+
+            <div class="pricing-preview-card">
+                <div class="pricing-preview-header">
+                    <div>
+                        <span>Precio estimado</span>
+                        <strong>
+                            @if (pricingPreview(); as preview) {
+                            {{ formatCurrency(preview.finalAmount) }}
+                            } @else {
+                            Pendiente
+                            }
+                        </strong>
+                    </div>
+
+                    <button type="button" class="preview-button" (click)="previewPricing()"
+                        [disabled]="isPreviewing() || isSaving()">
+                        {{ isPreviewing() ? 'Calculando...' : 'Recalcular' }}
+                    </button>
+                </div>
+
+                @if (isPreviewing()) {
+                <div class="preview-message">
+                    Calculando precio de la reserva...
+                </div>
+                }
+
+                @if (pricingPreview(); as preview) {
+                <div class="pricing-rows">
+                    @if (getSelectedSpaceHourlyRate(); as hourlyRate) {
+                    <div>
+                        <span>Tarifa por hora</span>
+                        <strong>{{ formatCurrency(hourlyRate) }}</strong>
+                    </div>
+                    }
+
+                    <div>
+                        <span>Duración</span>
+                        <strong>{{ getReservationDurationLabel() }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Subtotal base</span>
+                        <strong>{{ formatCurrency(preview.baseAmount) }}</strong>
+                    </div>
+
+                    @for (adjustment of preview.adjustments; track adjustment.name) {
+                    <div>
+                        <span>{{ adjustment.name }}</span>
+                        <strong>{{ formatCurrency(adjustment.amount) }}</strong>
+                    </div>
+                    }
+
+                    <div class="pricing-total">
+                        <span>Total estimado</span>
+                        <strong>{{ formatCurrency(preview.finalAmount) }}</strong>
+                    </div>
+                </div>
+                } @else {
+                <div class="preview-message">
+                    Completa espacio, inicio y fin para calcular el precio.
+                </div>
+                }
+            </div>
         </div>
 
         <div class="modal-actions">
@@ -199,7 +268,7 @@
                 Cancelar
             </button>
 
-            <button type="submit" class="primary" [disabled]="isSaving()">
+            <button type="submit" class="primary" [disabled]="isSaving() || isPreviewing()">
                 {{ isSaving() ? 'Guardando...' : 'Crear reserva' }}
             </button>
         </div>

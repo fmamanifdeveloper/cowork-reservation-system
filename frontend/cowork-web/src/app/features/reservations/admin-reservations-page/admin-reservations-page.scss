@@ -27,7 +27,7 @@
     border-radius: 14px;
     background: #2563eb;
     color: #ffffff;
-    font-weight: 900;
+    font-weight: 800;
     cursor: pointer;
     white-space: nowrap;
 }
@@ -67,7 +67,7 @@
     border-radius: 12px;
     background: #eef2ff;
     color: #1d4ed8;
-    font-weight: 900;
+    font-weight: 800;
     cursor: pointer;
     white-space: nowrap;
 }
@@ -140,7 +140,7 @@ table {
     span {
         color: #6b7280;
         font-size: 0.72rem;
-        font-weight: 900;
+        font-weight: 800;
         text-transform: uppercase;
     }
 
@@ -165,7 +165,7 @@ table {
     padding: 0.3rem 0.65rem;
     border-radius: 999px;
     font-size: 0.78rem;
-    font-weight: 900;
+    font-weight: 800;
 
     &.Pending {
         background: #e0e7ff;
@@ -197,7 +197,7 @@ table {
         padding: 0.5rem 0.75rem;
         border: 0;
         border-radius: 10px;
-        font-weight: 800;
+        font-weight: 700;
         cursor: pointer;
         white-space: nowrap;
     }
@@ -220,12 +220,72 @@ table {
     color: #6b7280;
 }
 
+/* MODAL */
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.48);
+    backdrop-filter: blur(3px);
+}
+
+.modal {
+    width: min(680px, 100%);
+    max-height: calc(100vh - 2rem);
+    display: grid;
+    overflow: hidden;
+    border-radius: 24px;
+    background: #ffffff;
+    box-shadow: 0 30px 90px rgba(15, 23, 42, 0.28);
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.35rem 1.35rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #ffffff 0%, #eef4ff 100%);
+
+    h2 {
+        margin: 0;
+        color: #111827;
+    }
+
+    p {
+        margin: 0.35rem 0 0;
+        color: #6b7280;
+    }
+
+    button {
+        width: 38px;
+        height: 38px;
+        border: 0;
+        border-radius: 12px;
+        background: #eef2ff;
+        color: #1d4ed8;
+        font-size: 1.2rem;
+        font-weight: 800;
+        cursor: pointer;
+    }
+}
+
 .modal-body {
+    display: grid;
+    gap: 1rem;
+    padding: 1.25rem;
+    overflow-y: auto;
+
     label {
         display: grid;
         gap: 0.4rem;
         color: #374151;
-        font-weight: 750;
+        font-weight: 650;
     }
 
     input,
@@ -247,11 +307,153 @@ table {
     }
 }
 
+.field-error {
+    color: #dc2626;
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
 }
+
+.availability-note {
+    padding: 0.85rem 0.95rem;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    background: #eff6ff;
+    color: #475569;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.pricing-preview-card {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem;
+    border: 1px solid #dbeafe;
+    border-radius: 16px;
+    background: #f8fbff;
+}
+
+.pricing-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+
+    >div {
+        display: grid;
+        gap: 0.2rem;
+    }
+
+    span {
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    strong {
+        color: #1d4ed8;
+        font-size: 1.35rem;
+        font-weight: 750;
+    }
+}
+
+.preview-button {
+    min-height: 38px;
+    padding: 0 0.85rem;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+.preview-message {
+    padding: 0.75rem;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.pricing-rows {
+    display: grid;
+    gap: 0.5rem;
+
+    div {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.65rem 0.75rem;
+        border-radius: 12px;
+        background: #ffffff;
+    }
+
+    span {
+        color: #64748b;
+    }
+
+    strong {
+        color: #111827;
+        font-weight: 650;
+    }
+
+    .pricing-total {
+        background: #eff6ff;
+
+        span,
+        strong {
+            color: #1d4ed8;
+            font-weight: 750;
+        }
+    }
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #e5e7eb;
+    background: #f8fafc;
+
+    button {
+        min-height: 42px;
+        padding: 0 1rem;
+        border: 0;
+        border-radius: 12px;
+        font-weight: 800;
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+    }
+
+    .secondary {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .primary {
+        background: #2563eb;
+        color: #ffffff;
+    }
+}
+
+/* CONFIRM MODALS */
 
 .confirm-modal {
     width: min(460px, 100%);
@@ -288,7 +490,7 @@ table {
     margin: 0 auto;
     border-radius: 50%;
     font-size: 1.4rem;
-    font-weight: 900;
+    font-weight: 800;
 }
 
 .danger-icon {
@@ -312,7 +514,7 @@ table {
         padding: 0 1rem;
         border: 0;
         border-radius: 12px;
-        font-weight: 900;
+        font-weight: 800;
         cursor: pointer;
 
         &:disabled {
@@ -362,5 +564,14 @@ table {
         button {
             width: 100%;
         }
+    }
+
+    .pricing-preview-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .preview-button {
+        width: 100%;
     }
 }

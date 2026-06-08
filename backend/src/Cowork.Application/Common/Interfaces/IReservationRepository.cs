@@ -19,6 +19,12 @@ public interface IReservationRepository
         DateTimeOffset to,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<Reservation>> ListBySpaceAndRangeAsync(
+        Guid spaceId,
+        DateTimeOffset from,
+        DateTimeOffset to,
+        CancellationToken cancellationToken);
+
     Task<bool> ExistsOverlappingAsync(
         Guid spaceId,
         DateTimeOffset startTime,

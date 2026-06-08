@@ -6,7 +6,8 @@
             <h1>Completa tu reserva en pocos pasos</h1>
 
             <p>
-                Selecciona el espacio, define el horario, calcula el precio y confirma tu reserva.
+                Selecciona un espacio, elige una fecha, revisa los horarios disponibles
+                y confirma tu reserva con precio estimado.
             </p>
         </div>
 
@@ -21,9 +22,10 @@
             <div class="form-section">
                 <div class="section-title">
                     <span>1</span>
+
                     <div>
                         <h2>Datos del cliente</h2>
-                        <p>Usaremos estos datos para registrar tu reserva.</p>
+                        <p>No necesitas crear una cuenta para reservar. Guarda tu código al finalizar.</p>
                     </div>
                 </div>
 
@@ -68,15 +70,16 @@
             <div class="form-section">
                 <div class="section-title">
                     <span>2</span>
+
                     <div>
-                        <h2>Espacio y horario</h2>
-                        <p>Las reservas se realizan en bloques de 30 minutos.</p>
+                        <h2>Espacio y fecha</h2>
+                        <p>Selecciona el ambiente y el día para consultar disponibilidad.</p>
                     </div>
                 </div>
 
                 <label>
                     Espacio
-                    <select name="spaceId" [(ngModel)]="form.spaceId">
+                    <select name="spaceId" [(ngModel)]="form.spaceId" (ngModelChange)="onSpaceChanged()">
                         @for (space of spaces(); track space.id) {
                         <option [value]="space.id" [disabled]="space.status !== 'Active'">
                             {{ space.name }} · {{ getCapacityLabel(space.capacity) }} · {{
@@ -90,44 +93,121 @@
                     }
                 </label>
 
-                <div class="form-row">
-                    <label>
-                        Inicio
-                        <input type="datetime-local" name="startTime" [(ngModel)]="form.startTime" step="1800" />
+                <label>
+                    Fecha de reserva
+                    <input type="date" name="reservationDate" [(ngModel)]="form.reservationDate"
+                        (ngModelChange)="onDateChanged()" />
 
-                        @if (isStartTimeInvalid()) {
-                        <small class="field-error">La fecha de inicio es obligatoria.</small>
-                        }
+                    @if (isDateInvalid()) {
+                    <small class="field-error">Selecciona una fecha.</small>
+                    }
+                </label>
 
-                        @if (isStartTimeStepInvalid()) {
-                        <small class="field-error">La hora debe estar en bloques de 30 minutos.</small>
-                        }
-                    </label>
+                <div class="availability-note">
+                    <i class="ti ti-info-circle"></i>
 
-                    <label>
-                        Fin
-                        <input type="datetime-local" name="endTime" [(ngModel)]="form.endTime" step="1800" />
-
-                        @if (isEndTimeInvalid()) {
-                        <small class="field-error">La fecha de fin es obligatoria.</small>
-                        }
-
-                        @if (isEndTimeStepInvalid()) {
-                        <small class="field-error">La hora debe estar en bloques de 30 minutos.</small>
-                        }
-
-                        @if (isScheduleInvalid()) {
-                        <small class="field-error">El fin debe ser posterior al inicio.</small>
-                        }
-                    </label>
+                    <span>
+                        Los horarios se muestran en bloques de 30 minutos. Los bloques ocupados no pueden seleccionarse.
+                    </span>
                 </div>
             </div>
 
+            <div class="form-section">
+                <div class="section-title">
+                    <span>3</span>
+
+                    <div>
+                        <h2>Horario disponible</h2>
+                        <p>Elige una hora libre y luego selecciona la duración permitida.</p>
+                    </div>
+                </div>
+
+                <div class="availability-panel">
+                    <div class="availability-panel__header">
+                        <div>
+                            <span>Disponibilidad</span>
+                            <h3>{{ formatDateOnly(form.reservationDate) }}</h3>
+                        </div>
+
+                        @if (getSelectedSpace(); as space) {
+                        <small>{{ formatSchedule(space.openingTime, space.closingTime) }}</small>
+                        }
+                    </div>
+
+                    @if (isLoadingAvailability()) {
+                    <div class="availability-empty">
+                        Cargando horarios disponibles...
+                    </div>
+                    } @else if (availability(); as data) {
+                    <div class="slots-grid">
+                        @for (slot of data.slots; track slot.startTime) {
+                        <button type="button" class="slot-button" [class.slot-button--available]="slot.isAvailable"
+                            [class.slot-button--reserved]="!slot.isAvailable"
+                            [class.slot-button--selected]="isSlotSelected(slot)"
+                            [disabled]="!slot.isAvailable || !!createdReservation()" (click)="selectStartSlot(slot)">
+                            <span>{{ formatTime(slot.startTime) }}</span>
+                            <small>{{ slot.isAvailable ? 'Libre' : 'Ocupado' }}</small>
+                        </button>
+                        }
+                    </div>
+
+                    <div class="availability-legend">
+                        <span><i class="available-dot"></i> Disponible</span>
+                        <span><i class="reserved-dot"></i> Ocupado</span>
+                        <span><i class="selected-dot"></i> Seleccionado</span>
+                    </div>
+                    } @else {
+                    <div class="availability-empty">
+                        Selecciona un espacio y una fecha para ver horarios disponibles.
+                    </div>
+                    }
+
+                    @if (isStartSlotInvalid()) {
+                    <small class="field-error">Selecciona una hora de inicio disponible.</small>
+                    }
+                </div>
+
+                @if (form.selectedStartTime) {
+                <div class="duration-panel">
+                    <div class="duration-panel__header">
+                        <div>
+                            <span>Duración</span>
+                            <h3>Inicio: {{ formatTime(form.selectedStartTime) }}</h3>
+                        </div>
+
+                        <small>Hasta el siguiente bloque ocupado o cierre del espacio.</small>
+                    </div>
+
+                    @if (getDurationOptions().length > 0) {
+                    <div class="duration-grid">
+                        @for (option of getDurationOptions(); track option.minutes) {
+                        <button type="button" class="duration-button"
+                            [class.duration-button--selected]="isDurationSelected(option.minutes)"
+                            [disabled]="!!createdReservation()" (click)="selectDuration(option.minutes)">
+                            <strong>{{ option.label }}</strong>
+                            <span>Hasta {{ formatTime(option.endTime) }}</span>
+                        </button>
+                        }
+                    </div>
+                    } @else {
+                    <div class="availability-empty">
+                        No hay duraciones disponibles desde la hora seleccionada.
+                    </div>
+                    }
+
+                    @if (isDurationInvalid()) {
+                    <small class="field-error">Selecciona una duración válida.</small>
+                    }
+                </div>
+                }
+            </div>
+
+            @if (!createdReservation()) {
             <div class="form-actions">
                 <button type="button" class="btn btn--ghost" (click)="previewPricing()"
                     [disabled]="isPreviewing() || isSubmitting()">
                     <i class="ti ti-calculator"></i>
-                    {{ isPreviewing() ? 'Calculando...' : 'Calcular precio' }}
+                    {{ isPreviewing() ? 'Calculando...' : 'Recalcular precio' }}
                 </button>
 
                 <button type="submit" class="btn btn--primary" [disabled]="isSubmitting()">
@@ -135,6 +215,21 @@
                     {{ isSubmitting() ? 'Confirmando...' : 'Confirmar reserva' }}
                 </button>
             </div>
+            } @else {
+            <div class="reservation-created-note">
+                <div>
+                    <i class="ti ti-check"></i>
+                </div>
+
+                <section>
+                    <h3>Reserva registrada</h3>
+                    <p>
+                        Tu reserva ya fue creada correctamente. Guarda el código mostrado en el resumen
+                        para consultar con el personal de atención.
+                    </p>
+                </section>
+            </div>
+            }
         </form>
 
         <aside class="reservation-summary">
@@ -173,6 +268,11 @@
                         <span>Zona horaria</span>
                         <strong>{{ space.timeZoneId }}</strong>
                     </div>
+
+                    <div>
+                        <span>Rango seleccionado</span>
+                        <strong>{{ getSelectedRangeLabel() }}</strong>
+                    </div>
                 </div>
                 } @else {
                 <div class="empty-box">
@@ -180,17 +280,42 @@
                 </div>
                 }
 
+                @if (isPreviewing()) {
+                <div class="preview-loading">
+                    <i class="ti ti-loader-2"></i>
+                    Calculando precio estimado...
+                </div>
+                }
+
                 @if (pricingPreview(); as preview) {
                 <div class="price-preview">
+                    @if (getSelectedSpaceHourlyRate(); as hourlyRate) {
                     <div class="price-row">
-                        <span>Base</span>
+                        <span>Tarifa por hora</span>
+                        <strong>{{ formatCurrency(hourlyRate) }}</strong>
+                    </div>
+                    }
+
+                    <div class="price-row">
+                        <span>Duración</span>
+                        <strong>{{ getReservationDurationLabel() }}</strong>
+                    </div>
+
+                    <div class="price-row">
+                        <span>Subtotal base</span>
                         <strong>{{ formatCurrency(preview.baseAmount) }}</strong>
                     </div>
 
-                    @for (adjustment of preview.adjustments; track adjustment.name) {
+                    @for (adjustment of preview.adjustments; track adjustment.rule) {
                     <div class="price-row">
-                        <span>{{ adjustment.name }}</span>
-                        <strong>{{ formatCurrency(adjustment.amount) }}</strong>
+                        <span>
+                            {{ getPricingAdjustmentLabel(adjustment) }}
+                            {{ getPricingAdjustmentPercentageLabel(adjustment) }}
+                        </span>
+
+                        <strong>
+                            {{ formatCurrency(getPricingAdjustmentAmount(adjustment)) }}
+                        </strong>
                     </div>
                     }
 
@@ -198,6 +323,10 @@
                         <span>Total estimado</span>
                         <strong>{{ formatCurrency(preview.finalAmount) }}</strong>
                     </div>
+                </div>
+                } @else {
+                <div class="empty-box">
+                    Selecciona horario y duración para calcular el precio.
                 </div>
                 }
 

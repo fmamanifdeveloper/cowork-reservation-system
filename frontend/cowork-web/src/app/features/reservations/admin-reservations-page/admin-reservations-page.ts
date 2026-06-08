@@ -7,7 +7,7 @@ import { Customer } from '@core/models/customer';
 import { Reservation, CreateReservationRequest, ReservationStatus } from '@core/models/reservation';
 import { NotificationStore } from '@core/notifications/notification-store';
 import { PublicApi } from '@features/public/public-api';
-import { PublicSpace } from '@features/public/public-models';
+import { PublicPricingPreviewResponse, PublicSpace } from '@features/public/public-models';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -24,6 +24,8 @@ export class AdminReservationsPage {
 
   readonly authStore = inject(AuthStore);
 
+  private pricingPreviewTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
   readonly reservations = signal<Reservation[]>([]);
   readonly customers = signal<Customer[]>([]);
   readonly spaces = signal<PublicSpace[]>([]);
@@ -32,10 +34,13 @@ export class AdminReservationsPage {
   readonly isSaving = signal(false);
   readonly isCancelling = signal(false);
   readonly isCompleting = signal(false);
+  readonly isPreviewing = signal(false);
 
   readonly isFormModalOpen = signal(false);
   readonly reservationToCancel = signal<Reservation | null>(null);
   readonly reservationToComplete = signal<Reservation | null>(null);
+  readonly pricingPreview = signal<PublicPricingPreviewResponse | null>(null);
+
   readonly wasSubmitted = signal(false);
 
   readonly canManageAll = computed(() =>
@@ -46,6 +51,10 @@ export class AdminReservationsPage {
 
   ngOnInit(): void {
     this.loadInitialData();
+  }
+
+  ngOnDestroy(): void {
+    this.clearPricingPreviewTimeout();
   }
 
   loadInitialData(): void {
@@ -109,6 +118,8 @@ export class AdminReservationsPage {
       this.form.customerId = firstCustomer.id;
     }
 
+    this.clearPricingPreviewTimeout();
+    this.pricingPreview.set(null);
     this.wasSubmitted.set(false);
     this.isFormModalOpen.set(true);
   }
@@ -121,10 +132,32 @@ export class AdminReservationsPage {
     this.resetFormModal();
   }
 
+  onReservationInputChanged(): void {
+    this.pricingPreview.set(null);
+
+    this.clearPricingPreviewTimeout();
+
+    this.pricingPreviewTimeoutId = setTimeout(() => {
+      if (this.canAutoPreviewPrice()) {
+        this.runPricingPreview(false);
+      }
+    }, 650);
+  }
+
+  previewPricing(): void {
+    this.wasSubmitted.set(true);
+    this.runPricingPreview(true);
+  }
+
   createReservation(): void {
     this.wasSubmitted.set(true);
 
     if (!this.validateForm()) {
+      return;
+    }
+
+    if (!this.pricingPreview()) {
+      this.notificationStore.warning('Revisa el precio estimado antes de crear la reserva.');
       return;
     }
 
@@ -291,7 +324,9 @@ export class AdminReservationsPage {
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('es-PE', {
       style: 'currency',
-      currency: 'PEN'
+      currency: 'PEN',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
     }).format(value);
   }
 
@@ -336,12 +371,62 @@ export class AdminReservationsPage {
     );
   }
 
-  private validateForm(): boolean {
-    if (!this.form.spaceId) {
-      this.notificationStore.warning('Selecciona un espacio.');
-      return false;
+  private runPricingPreview(showValidationFeedback: boolean): void {
+    if (showValidationFeedback) {
+      this.wasSubmitted.set(true);
     }
 
+    if (!this.validateSchedule(showValidationFeedback)) {
+      return;
+    }
+
+    this.isPreviewing.set(true);
+
+    this.publicApi
+      .previewPricing({
+        spaceId: this.form.spaceId,
+        startTime: this.toPeruOffsetDateTime(this.form.startTime),
+        endTime: this.toPeruOffsetDateTime(this.form.endTime)
+      })
+      .pipe(finalize(() => this.isPreviewing.set(false)))
+      .subscribe({
+        next: preview => {
+          this.pricingPreview.set(preview);
+
+          if (showValidationFeedback) {
+            this.notificationStore.success('Precio calculado correctamente.');
+          }
+        },
+        error: error => {
+          this.pricingPreview.set(null);
+
+          if (error.status === 409) {
+            this.notificationStore.error('El espacio ya está reservado en ese horario.');
+            return;
+          }
+
+          if (error.status === 400) {
+            this.notificationStore.error('La reserva no cumple las reglas requeridas.');
+            return;
+          }
+
+          this.notificationStore.error('No se pudo calcular el precio.');
+        }
+      });
+  }
+
+  private canAutoPreviewPrice(): boolean {
+    return (
+      !!this.form.spaceId &&
+      !!this.form.startTime &&
+      !!this.form.endTime &&
+      this.hasAllowedTimeStep(this.form.startTime) &&
+      this.hasAllowedTimeStep(this.form.endTime) &&
+      new Date(this.form.startTime) < new Date(this.form.endTime)
+    );
+  }
+
+  private validateForm(): boolean {
     if (this.canManageAll() && !this.form.customerId) {
       this.notificationStore.warning('Selecciona un cliente.');
       return false;
@@ -352,8 +437,23 @@ export class AdminReservationsPage {
       return false;
     }
 
+    return this.validateSchedule(true);
+  }
+
+  private validateSchedule(showFeedback = true): boolean {
+    if (!this.form.spaceId) {
+      if (showFeedback) {
+        this.notificationStore.warning('Selecciona un espacio.');
+      }
+
+      return false;
+    }
+
     if (!this.form.startTime || !this.form.endTime) {
-      this.notificationStore.warning('Ingresa fecha y hora de inicio y fin.');
+      if (showFeedback) {
+        this.notificationStore.warning('Ingresa fecha y hora de inicio y fin.');
+      }
+
       return false;
     }
 
@@ -361,12 +461,18 @@ export class AdminReservationsPage {
       !this.hasAllowedTimeStep(this.form.startTime) ||
       !this.hasAllowedTimeStep(this.form.endTime)
     ) {
-      this.notificationStore.warning('Las reservas deben usar horarios en bloques de 30 minutos.');
+      if (showFeedback) {
+        this.notificationStore.warning('Las reservas deben usar horarios en bloques de 30 minutos.');
+      }
+
       return false;
     }
 
     if (new Date(this.form.startTime) >= new Date(this.form.endTime)) {
-      this.notificationStore.warning('La hora de inicio debe ser menor que la hora de fin.');
+      if (showFeedback) {
+        this.notificationStore.warning('La hora de inicio debe ser menor que la hora de fin.');
+      }
+
       return false;
     }
 
@@ -374,8 +480,10 @@ export class AdminReservationsPage {
   }
 
   private resetFormModal(): void {
+    this.clearPricingPreviewTimeout();
     this.isFormModalOpen.set(false);
     this.wasSubmitted.set(false);
+    this.pricingPreview.set(null);
     this.form = this.createEmptyForm();
   }
 
@@ -403,5 +511,38 @@ export class AdminReservationsPage {
 
   private toPeruOffsetDateTime(value: string): string {
     return value.length === 16 ? `${value}:00-05:00` : `${value}-05:00`;
+  }
+
+  private clearPricingPreviewTimeout(): void {
+    if (this.pricingPreviewTimeoutId) {
+      clearTimeout(this.pricingPreviewTimeoutId);
+      this.pricingPreviewTimeoutId = null;
+    }
+  }
+
+  getSelectedSpaceHourlyRate(): number | null {
+    const space = this.spaces().find(space => space.id === this.form.spaceId);
+    return space?.baseHourlyRate ?? null;
+  }
+
+  getReservationDurationLabel(): string {
+    if (!this.form.startTime || !this.form.endTime) {
+      return 'Pendiente';
+    }
+
+    const start = new Date(this.form.startTime);
+    const end = new Date(this.form.endTime);
+
+    if (start >= end) {
+      return 'Pendiente';
+    }
+
+    const durationInHours = (end.getTime() - start.getTime()) / 1000 / 60 / 60;
+
+    if (Number.isInteger(durationInHours)) {
+      return `${durationInHours} h`;
+    }
+
+    return `${durationInHours.toFixed(1)} h`;
   }
 }

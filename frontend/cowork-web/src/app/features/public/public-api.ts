@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 
 import { API_BASE_URL } from '@core/api/api-config';
-import { CreatePublicReservationRequest, PublicPricingPreviewRequest, PublicPricingPreviewResponse, PublicReservationResponse, PublicSpace } from './public-models';
+import { CreatePublicReservationRequest, PublicAvailabilityResponse, PublicPricingPreviewRequest, PublicPricingPreviewResponse, PublicReservationResponse, PublicSpace } from './public-models';
 
 @Injectable({
     providedIn: 'root'
@@ -26,6 +26,17 @@ export class PublicApi {
         return this.http.post<PublicReservationResponse>(
             `${this.baseUrl}/reservations`,
             request
+        );
+    }
+
+    getSpaceAvailability(spaceId: string, date: string) {
+        return this.http.get<PublicAvailabilityResponse>(
+            `${this.baseUrl}/spaces/${spaceId}/availability`,
+            {
+                params: {
+                    date
+                }
+            }
         );
     }
 }

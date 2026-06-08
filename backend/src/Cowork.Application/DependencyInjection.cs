@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<AuthService>();
         services.AddScoped<PublicReservationService>();
         services.AddScoped<AuditLogService>();
+        services.AddScoped<PublicAvailabilityService>();
 
         return services;
     }

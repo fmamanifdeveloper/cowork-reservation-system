@@ -55,6 +55,26 @@ public sealed class ReservationRepository : IReservationRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Reservation>> ListBySpaceAndRangeAsync(
+        Guid spaceId,
+        DateTimeOffset from,
+        DateTimeOffset to,
+        CancellationToken cancellationToken)
+    {
+        var fromUtc = from.ToUniversalTime();
+        var toUtc = to.ToUniversalTime();
+
+        return await _dbContext.Reservations
+            .AsNoTracking()
+            .Where(x =>
+                x.SpaceId == spaceId &&
+                x.Status != ReservationStatus.Cancelled &&
+                x.StartTime < toUtc &&
+                x.EndTime > fromUtc)
+            .OrderBy(x => x.StartTime)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> ExistsOverlappingAsync(
         Guid spaceId,
         DateTimeOffset startTime,
