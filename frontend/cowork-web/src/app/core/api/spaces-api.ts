@@ -1,31 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { API_BASE_URL } from './api-config';
-
-export type SpaceStatus = 'Active' | 'Maintenance' | 'Inactive';
-
-export interface Space {
-  id: string;
-  name: string;
-  capacity: number;
-  baseHourlyRate: number;
-  openingTime: string;
-  closingTime: string;
-  timeZoneId: string;
-  status: SpaceStatus;
-}
-
-export interface CreateSpaceRequest {
-  name: string;
-  capacity: number;
-  baseHourlyRate: number;
-  openingTime: string;
-  closingTime: string;
-  timeZoneId: string;
-  status: SpaceStatus;
-}
-
-export type UpdateSpaceRequest = CreateSpaceRequest;
+import { Space, CreateSpaceRequest, UpdateSpaceRequest } from '@core/models/space';
 
 @Injectable({
   providedIn: 'root',

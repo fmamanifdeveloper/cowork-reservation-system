@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CustomersApi, Customer, CreateCustomerRequest } from '@core/api/customers-api';
+import { CustomersApi } from '@core/api/customers-api';
+import { CreateCustomerRequest, Customer } from '@core/models/customer';
 import { NotificationStore } from '@core/notifications/notification-store';
 import { finalize } from 'rxjs';
 

@@ -1,23 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { API_BASE_URL } from './api-config';
+import { CreateCustomerRequest, Customer, UpdateCustomerRequest } from '@core/models/customer';
 
-export interface Customer {
-    id: string;
-    fullName: string;
-    email: string | null;
-    phone: string | null;
-    documentNumber: string | null;
-}
 
-export interface CreateCustomerRequest {
-    fullName: string;
-    email: string | null;
-    phone: string | null;
-    documentNumber: string | null;
-}
-
-export type UpdateCustomerRequest = CreateCustomerRequest;
 
 @Injectable({
     providedIn: 'root'

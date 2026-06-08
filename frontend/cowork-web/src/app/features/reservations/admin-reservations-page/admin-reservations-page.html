@@ -1,0 +1,138 @@
+<section class="admin-page">
+    <div class="page-header">
+        <div>
+            <h1>Reservas</h1>
+            <p>
+                @if (canManageAll()) {
+                Administra reservas de clientes, cancelaciones y finalizaciones.
+                } @else {
+                Consulta y cancela tus reservas.
+                }
+            </p>
+        </div>
+    </div>
+
+    <div class="page-grid">
+        <form class="panel form-panel" (ngSubmit)="createReservation()">
+            <h2>Nueva reserva</h2>
+
+            <label>
+                Espacio
+                <select name="spaceId" [(ngModel)]="form.spaceId">
+                    @for (space of spaces(); track space.id) {
+                    <option [value]="space.id">
+                        {{ space.name }} · S/ {{ space.baseHourlyRate }} por hora
+                    </option>
+                    }
+                </select>
+            </label>
+
+            @if (canManageAll()) {
+            <label>
+                Cliente
+                <select name="customerId" [(ngModel)]="form.customerId">
+                    @for (customer of customers(); track customer.id) {
+                    <option [value]="customer.id">
+                        {{ customer.fullName }}
+                    </option>
+                    }
+                </select>
+            </label>
+            }
+
+            <label>
+                Inicio
+                <input type="datetime-local" name="startTime" [(ngModel)]="form.startTime" />
+            </label>
+
+            <label>
+                Fin
+                <input type="datetime-local" name="endTime" [(ngModel)]="form.endTime" />
+            </label>
+
+            <div class="actions">
+                <button type="submit" [disabled]="isSaving()">
+                    {{ isSaving() ? 'Guardando...' : 'Crear reserva' }}
+                </button>
+            </div>
+        </form>
+
+        <div class="panel table-panel">
+            <div class="table-header">
+                <h2>Listado</h2>
+                <button type="button" (click)="loadReservations()">Actualizar</button>
+            </div>
+
+            @if (isLoading()) {
+            <div class="empty-state">Cargando reservas...</div>
+            } @else {
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Espacio</th>
+                            <th>Cliente</th>
+                            <th>Horario</th>
+                            <th>Estado</th>
+                            <th>Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (reservation of reservations(); track reservation.id) {
+                        <tr>
+                            <td>
+                                <strong>{{ reservation.reservationCode }}</strong>
+                                <small>{{ reservation.id }}</small>
+                            </td>
+
+                            <td>{{ getSpaceName(reservation.spaceId) }}</td>
+
+                            <td>{{ getCustomerName(reservation.customerId) }}</td>
+
+                            <td>
+                                <strong>{{ formatDate(reservation.startTime) }}</strong>
+                                <small>{{ formatDate(reservation.endTime) }}</small>
+                            </td>
+
+                            <td>
+                                <span class="status" [class]="reservation.status">
+                                    {{ getStatusLabel(reservation.status) }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <strong>S/ {{ reservation.finalAmount }}</strong>
+                                @if (reservation.refundAmount !== null) {
+                                <small>Reembolso: S/ {{ reservation.refundAmount }}</small>
+                                }
+                            </td>
+
+                            <td class="row-actions">
+                                @if (canCancel(reservation)) {
+                                <button type="button" class="danger" (click)="cancelReservation(reservation)">
+                                    Cancelar
+                                </button>
+                                }
+
+                                @if (canComplete(reservation)) {
+                                <button type="button" class="success" (click)="completeReservation(reservation)">
+                                    Completar
+                                </button>
+                                }
+                            </td>
+                        </tr>
+                        } @empty {
+                        <tr>
+                            <td colspan="7">No hay reservas registradas.</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            }
+        </div>
+    </div>
+</section>

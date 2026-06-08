@@ -75,7 +75,9 @@ export const routes: Routes = [
             },
             {
                 path: 'reservations',
-                component: DashboardPage,
+                loadComponent: () =>
+                    import('./features/reservations/admin-reservations-page/admin-reservations-page')
+                        .then(m => m.AdminReservationsPage),
                 canActivate: [roleGuard],
                 data: {
                     roles: ['Admin', 'Staff', 'Customer']
