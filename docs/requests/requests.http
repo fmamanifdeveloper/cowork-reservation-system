@@ -1,0 +1,451 @@
+@host = https://localhost:7011
+
+@spaceId1 = 00000000-0000-0000-0000-000000000001
+@spaceId2 = 00000000-0000-0000-0000-000000000002
+@spaceId3 = 00000000-0000-0000-0000-000000000003
+@spaceId4 = 00000000-0000-0000-0000-000000000004
+@spaceId5 = 00000000-0000-0000-0000-000000000005
+@spaceMaintenanceId = 00000000-0000-0000-0000-000000000006
+
+@customerId1 = 00000000-0000-0000-0000-000000000201
+@customerId2 = 00000000-0000-0000-0000-000000000202
+
+### ============================================================
+### OPENAPI
+### ============================================================
+
+### OpenAPI document
+GET {{host}}/openapi/v1.json
+Accept: application/json
+
+
+### ============================================================
+### AUTH
+### ============================================================
+
+### Login admin
+# @name loginAdmin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin123!"
+}
+
+
+### Login staff
+# @name loginStaff
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "staff01",
+  "password": "Admin123!"
+}
+
+
+### Login customer
+# @name loginCustomer
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "juan.perez",
+  "password": "Admin123!"
+}
+
+
+### Current user - admin
+GET {{host}}/api/auth/me
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Current user - customer
+GET {{host}}/api/auth/me
+Authorization: Bearer {{loginCustomer.response.body.$.accessToken}}
+Accept: application/json
+
+
+### ============================================================
+### PUBLIC ENDPOINTS
+### ============================================================
+
+### Public spaces
+GET {{host}}/api/public/spaces
+Accept: application/json
+
+
+### Public pricing preview
+POST {{host}}/api/public/pricing/preview
+Content-Type: application/json
+
+{
+  "spaceId": "{{spaceId1}}",
+  "startTime": "2026-06-15T10:00:00-05:00",
+  "endTime": "2026-06-15T12:00:00-05:00"
+}
+
+
+### Public reservation
+# @name createPublicReservation
+POST {{host}}/api/public/reservations
+Content-Type: application/json
+
+{
+  "spaceId": "{{spaceId2}}",
+  "customerFullName": "Carlos Mendoza",
+  "customerEmail": "carlos.mendoza@example.com",
+  "customerPhone": "987654321",
+  "customerDocumentNumber": "76543210",
+  "startTime": "2026-06-18T09:00:00-05:00",
+  "endTime": "2026-06-18T11:00:00-05:00"
+}
+
+
+### ============================================================
+### ADMIN / STAFF - SPACES
+### ============================================================
+
+### List spaces as admin
+GET {{host}}/api/spaces
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### List spaces as staff
+GET {{host}}/api/spaces
+Authorization: Bearer {{loginStaff.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Get space by id
+GET {{host}}/api/spaces/{{spaceId1}}
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Create space
+# @name createSpace
+POST {{host}}/api/spaces
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Sala Demo {{$timestamp}}",
+  "capacity": 8,
+  "baseHourlyRate": 45,
+  "openingTime": "08:00:00",
+  "closingTime": "20:00:00",
+  "timeZoneId": "America/Lima",
+  "status": "Active"
+}
+
+
+### Get created space
+GET {{host}}/api/spaces/{{createSpace.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Update created space
+PUT {{host}}/api/spaces/{{createSpace.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Sala Demo Actualizada {{$timestamp}}",
+  "capacity": 10,
+  "baseHourlyRate": 55,
+  "openingTime": "08:00:00",
+  "closingTime": "22:00:00",
+  "timeZoneId": "America/Lima",
+  "status": "Active"
+}
+
+
+### Delete created space logically
+DELETE {{host}}/api/spaces/{{createSpace.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+
+
+### Forbidden test - customer cannot manage spaces
+GET {{host}}/api/spaces
+Authorization: Bearer {{loginCustomer.response.body.$.accessToken}}
+Accept: application/json
+
+
+### ============================================================
+### ADMIN / STAFF - CUSTOMERS
+### ============================================================
+
+### List customers
+GET {{host}}/api/customers
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Get customer by id
+GET {{host}}/api/customers/{{customerId1}}
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Create customer
+# @name createCustomer
+POST {{host}}/api/customers
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "fullName": "Lucía Torres {{$timestamp}}",
+  "email": "lucia.torres.{{$timestamp}}@example.com",
+  "phone": "955444333",
+  "documentNumber": "71234567"
+}
+
+
+### Get created customer
+GET {{host}}/api/customers/{{createCustomer.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Update created customer
+PUT {{host}}/api/customers/{{createCustomer.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "fullName": "Lucía Torres Actualizada",
+  "email": "lucia.torres.updated.{{$timestamp}}@example.com",
+  "phone": "955444333",
+  "documentNumber": "71234567"
+}
+
+
+### Delete created customer logically
+DELETE {{host}}/api/customers/{{createCustomer.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+
+
+### Forbidden test - customer cannot manage customers
+GET {{host}}/api/customers
+Authorization: Bearer {{loginCustomer.response.body.$.accessToken}}
+Accept: application/json
+
+
+### ============================================================
+### RESERVATIONS
+### ============================================================
+
+### List reservations as admin
+GET {{host}}/api/reservations
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### List own reservations as customer
+GET {{host}}/api/reservations
+Authorization: Bearer {{loginCustomer.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Create reservation as admin/staff for selected customer
+# @name createAdminReservation
+POST {{host}}/api/reservations
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "spaceId": "{{spaceId3}}",
+  "customerId": "{{customerId1}}",
+  "startTime": "2026-06-20T10:00:00-05:00",
+  "endTime": "2026-06-20T12:00:00-05:00"
+}
+
+
+### Get reservation as admin
+GET {{host}}/api/reservations/{{createAdminReservation.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Create reservation as customer
+### customerId sent here is ignored by the backend when role is Customer.
+### The customerId from the JWT token is used instead.
+# @name createCustomerReservation
+POST {{host}}/api/reservations
+Authorization: Bearer {{loginCustomer.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "spaceId": "{{spaceId4}}",
+  "customerId": "{{customerId2}}",
+  "startTime": "2026-06-21T15:00:00-05:00",
+  "endTime": "2026-06-21T17:00:00-05:00"
+}
+
+
+### Get own reservation as customer
+GET {{host}}/api/reservations/{{createCustomerReservation.response.body.$.id}}
+Authorization: Bearer {{loginCustomer.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Cancel reservation as admin
+POST {{host}}/api/reservations/{{createAdminReservation.response.body.$.id}}/cancel
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Complete reservation as admin/staff
+### Use a reservation that is not cancelled.
+POST {{host}}/api/reservations/{{createCustomerReservation.response.body.$.id}}/complete
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Forbidden test - customer cannot complete reservations
+POST {{host}}/api/reservations/{{createCustomerReservation.response.body.$.id}}/complete
+Authorization: Bearer {{loginCustomer.response.body.$.accessToken}}
+Accept: application/json
+
+
+### ============================================================
+### OVERBOOKING TEST
+### ============================================================
+
+### First reservation - should succeed
+# @name createOverbookingBaseReservation
+POST {{host}}/api/reservations
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "spaceId": "{{spaceId5}}",
+  "customerId": "{{customerId1}}",
+  "startTime": "2026-06-25T10:00:00-05:00",
+  "endTime": "2026-06-25T12:00:00-05:00"
+}
+
+
+### Second overlapping reservation - should return 409 Conflict
+POST {{host}}/api/reservations
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "spaceId": "{{spaceId5}}",
+  "customerId": "{{customerId2}}",
+  "startTime": "2026-06-25T10:30:00-05:00",
+  "endTime": "2026-06-25T11:30:00-05:00"
+}
+
+
+### Consecutive reservation - should succeed because [) range allows it
+POST {{host}}/api/reservations
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "spaceId": "{{spaceId5}}",
+  "customerId": "{{customerId2}}",
+  "startTime": "2026-06-25T12:00:00-05:00",
+  "endTime": "2026-06-25T13:00:00-05:00"
+}
+
+
+### ============================================================
+### VALIDATION TESTS
+### ============================================================
+
+### Invalid duration - less than 30 minutes
+POST {{host}}/api/reservations
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "spaceId": "{{spaceId1}}",
+  "customerId": "{{customerId1}}",
+  "startTime": "2026-06-26T10:00:00-05:00",
+  "endTime": "2026-06-26T10:15:00-05:00"
+}
+
+
+### Invalid duration - more than 8 hours
+POST {{host}}/api/reservations
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "spaceId": "{{spaceId1}}",
+  "customerId": "{{customerId1}}",
+  "startTime": "2026-06-27T08:00:00-05:00",
+  "endTime": "2026-06-27T18:30:00-05:00"
+}
+
+
+### Invalid schedule - outside opening hours
+POST {{host}}/api/reservations
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "spaceId": "{{spaceId1}}",
+  "customerId": "{{customerId1}}",
+  "startTime": "2026-06-28T06:00:00-05:00",
+  "endTime": "2026-06-28T07:00:00-05:00"
+}
+
+
+### Maintenance space - should fail
+POST {{host}}/api/reservations
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "spaceId": "{{spaceMaintenanceId}}",
+  "customerId": "{{customerId1}}",
+  "startTime": "2026-06-29T10:00:00-05:00",
+  "endTime": "2026-06-29T12:00:00-05:00"
+}
+
+
+### ============================================================
+### AUDIT LOGS
+### ============================================================
+
+### List audit logs
+GET {{host}}/api/audit-logs
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Forbidden test - customer cannot access audit logs
+GET {{host}}/api/audit-logs
+Authorization: Bearer {{loginCustomer.response.body.$.accessToken}}
+Accept: application/json
+
+
+### ============================================================
+### REPORTS
+### ============================================================
+
+### Reports dashboard - default last 30 days
+GET {{host}}/api/reports
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Reports dashboard - custom date range
+GET {{host}}/api/reports?from=2026-06-01T00:00:00Z&to=2026-06-30T23:59:59Z
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+Accept: application/json
+
+
+### Forbidden test - customer cannot access reports
+GET {{host}}/api/reports
+Authorization: Bearer {{loginCustomer.response.body.$.accessToken}}
+Accept: application/json
