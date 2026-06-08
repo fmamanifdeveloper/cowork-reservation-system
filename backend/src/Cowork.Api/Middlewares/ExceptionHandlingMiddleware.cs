@@ -38,6 +38,11 @@ public sealed class ExceptionHandlingMiddleware
     {
         var response = exception switch
         {
+            ReservationConflictException reservationConflictException => CreateResponse(
+                HttpStatusCode.Conflict,
+                "Reservation conflict",
+                reservationConflictException.Message),
+
             NotFoundException notFoundException => CreateResponse(
                 HttpStatusCode.NotFound,
                 "Not found",
