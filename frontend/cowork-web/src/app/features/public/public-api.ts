@@ -1,14 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 
-import {
-    PricingPreviewRequest,
-    PricingPreviewResponse,
-    PublicCreateReservationRequest,
-    PublicReservationResponse,
-    PublicSpace
-} from './public-models';
 import { API_BASE_URL } from '@core/api/api-config';
+import { CreatePublicReservationRequest, PublicPricingPreviewRequest, PublicPricingPreviewResponse, PublicReservationResponse, PublicSpace } from './public-models';
 
 @Injectable({
     providedIn: 'root'
@@ -21,11 +15,17 @@ export class PublicApi {
         return this.http.get<PublicSpace[]>(`${this.baseUrl}/spaces`);
     }
 
-    previewPricing(request: PricingPreviewRequest) {
-        return this.http.post<PricingPreviewResponse>(`${this.baseUrl}/pricing/preview`, request);
+    previewPricing(request: PublicPricingPreviewRequest) {
+        return this.http.post<PublicPricingPreviewResponse>(
+            `${this.baseUrl}/pricing/preview`,
+            request
+        );
     }
 
-    createReservation(request: PublicCreateReservationRequest) {
-        return this.http.post<PublicReservationResponse>(`${this.baseUrl}/reservations`, request);
+    createReservation(request: CreatePublicReservationRequest) {
+        return this.http.post<PublicReservationResponse>(
+            `${this.baseUrl}/reservations`,
+            request
+        );
     }
 }

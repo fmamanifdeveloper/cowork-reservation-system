@@ -1,50 +1,154 @@
 <section class="public-page">
-    <div class="hero">
-        <div>
-            <span class="eyebrow">CoWork Spaces</span>
-            <h1>Reserva espacios de trabajo de forma rápida</h1>
+    <header class="hero">
+        <div class="hero__content">
+            <span class="hero__eyebrow">CoWork Spaces</span>
+
+            <h1>
+                Reserva espacios de trabajo de forma rápida y profesional
+            </h1>
+
             <p>
-                Elige una sala disponible, revisa el horario y calcula el precio antes de confirmar tu reserva.
+                Encuentra salas y oficinas disponibles, revisa el horario de atención
+                y realiza tu reserva en pocos pasos.
             </p>
+
+            <div class="hero__actions">
+                <a class="btn btn--primary" href="#spaces">
+                    Ver espacios
+                </a>
+
+                <a class="btn btn--dark" routerLink="/auth/login">
+                    Acceso interno
+                </a>
+            </div>
+
+            <div class="hero__stats">
+                <article class="stat-card">
+                    <strong>{{ availableSpacesCount() }}</strong>
+                    <span>Espacios disponibles</span>
+                </article>
+
+                <article class="stat-card">
+                    <strong>{{ totalCapacity() }}</strong>
+                    <span>Capacidad total</span>
+                </article>
+
+                <article class="stat-card">
+                    <strong>30 min</strong>
+                    <span>Reserva mínima</span>
+                </article>
+            </div>
         </div>
 
-        <a routerLink="/auth/login" class="admin-link">Acceso interno</a>
-    </div>
-
-    @if (isLoading()) {
-    <div class="state-card">Cargando espacios...</div>
-    } @else {
-    <div class="spaces-grid">
-        @for (space of spaces(); track space.id) {
-        <article class="space-card">
-            <div class="space-card__header">
-                <div>
-                    <h2>{{ space.name }}</h2>
-                    <p>{{ space.capacity }} personas</p>
-                </div>
-
-                <span>{{ space.status }}</span>
-            </div>
-
-            <div class="space-info">
-                <div>
-                    <small>Tarifa por hora</small>
-                    <strong>S/ {{ space.baseHourlyRate }}</strong>
+        <div class="hero__side">
+            <div class="hero-highlight">
+                <div class="hero-highlight__icon">
+                    <i class="ti ti-clock"></i>
                 </div>
 
                 <div>
-                    <small>Horario</small>
-                    <strong>{{ space.openingTime }} - {{ space.closingTime }}</strong>
+                    <h2>Reserva por horas</h2>
+                    <p>Elige la duración exacta. Sin contratos ni compromisos.</p>
                 </div>
             </div>
 
-            <a [routerLink]="['/public/reservation']" [queryParams]="{ spaceId: space.id }">
-                Reservar este espacio
-            </a>
-        </article>
-        } @empty {
-        <div class="state-card">No hay espacios disponibles por el momento.</div>
+            <div class="hero-highlight">
+                <div class="hero-highlight__icon">
+                    <i class="ti ti-shield-check"></i>
+                </div>
+
+                <div>
+                    <h2>Sin dobles reservas</h2>
+                    <p>Disponibilidad protegida para evitar cruces de horario.</p>
+                </div>
+            </div>
+
+            <div class="hero-highlight">
+                <div class="hero-highlight__icon">
+                    <i class="ti ti-receipt"></i>
+                </div>
+
+                <div>
+                    <h2>Precio claro antes de confirmar</h2>
+                    <p>Revisa el total estimado antes de crear tu reserva.</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="spaces-section" id="spaces">
+        <div class="section-header">
+            <div>
+                <span class="section-label">Espacios disponibles</span>
+                <h2>Elige el espacio que mejor se adapte a tu necesidad</h2>
+                <p>
+                    Consulta la capacidad, la tarifa por hora y el horario de disponibilidad.
+                </p>
+            </div>
+
+            <button type="button" class="btn btn--ghost" (click)="loadSpaces()">
+                <i class="ti ti-refresh"></i>
+                Actualizar
+            </button>
+        </div>
+
+        @if (isLoading()) {
+        <div class="empty-state">
+            Cargando espacios disponibles...
+        </div>
+        } @else {
+        <div class="spaces-grid">
+            @for (space of spaces(); track space.id) {
+            <article class="space-card" [class.space-card--disabled]="!isAvailable(space)">
+                <div class="space-card__header">
+                    <div>
+                        <h3>{{ space.name }}</h3>
+                        <p>{{ getCapacityLabel(space.capacity) }}</p>
+                    </div>
+
+                    <span class="status-badge" [class.status-badge--active]="space.status === 'Active'"
+                        [class.status-badge--maintenance]="space.status === 'Maintenance'"
+                        [class.status-badge--inactive]="space.status === 'Inactive'">
+                        {{ getStatusLabel(space.status) }}
+                    </span>
+                </div>
+
+                <div class="space-card__body">
+                    <div class="info-box info-box--price">
+                        <span>Tarifa por hora</span>
+                        <strong>{{ formatHourlyRate(space.baseHourlyRate) }}</strong>
+                    </div>
+
+                    <div class="info-box">
+                        <span>Horario</span>
+                        <strong>{{ formatSchedule(space.openingTime, space.closingTime) }}</strong>
+                    </div>
+
+                    <div class="info-box">
+                        <span>Zona horaria</span>
+                        <strong>{{ space.timeZoneId }}</strong>
+                    </div>
+                </div>
+
+                <div class="space-card__footer">
+                    @if (isAvailable(space)) {
+                    <a class="btn btn--primary btn--block" [routerLink]="['/public/reservation']"
+                        [queryParams]="{ spaceId: space.id }">
+                        Reservar este espacio
+                    </a>
+                    } @else {
+                    <button type="button" class="btn btn--block" disabled>
+                        No disponible
+                    </button>
+                    }
+                </div>
+            </article>
+            } @empty {
+            <div class="empty-state">
+                No hay espacios publicados en este momento.
+            </div>
+            }
+        </div>
         }
-    </div>
-    }
+    </section>
 </section>

@@ -2,9 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SpacesApi } from '@core/api/spaces-api';
 import { ApiErrorTranslator } from '@core/errors/api-error-translator';
-import { Space, CreateSpaceRequest } from '@core/models/space';
+import { Space, CreateSpaceRequest, SpaceStatus } from '@core/models/space';
 import { NotificationStore } from '@core/notifications/notification-store';
-import { SpaceStatus } from '@features/public/public-models';
 import { finalize } from 'rxjs';
 
 @Component({

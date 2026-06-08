@@ -3,12 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { CustomersApi } from '@core/api/customers-api';
 import { ReservationsApi } from '@core/api/reservations-api';
 import { AuthStore } from '@core/auth/auth-store';
-import { ApiErrorTranslator } from '@core/errors/api-error-translator';
 import { Customer } from '@core/models/customer';
-import { Reservation, CreateReservationRequest } from '@core/models/reservation';
+import { Reservation, CreateReservationRequest, ReservationStatus } from '@core/models/reservation';
 import { NotificationStore } from '@core/notifications/notification-store';
 import { PublicApi } from '@features/public/public-api';
-import { PublicSpace, ReservationStatus } from '@features/public/public-models';
+import { PublicSpace } from '@features/public/public-models';
 import { finalize } from 'rxjs';
 
 @Component({

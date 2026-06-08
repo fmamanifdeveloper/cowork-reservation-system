@@ -1,55 +1,50 @@
-export type SpaceStatus = 'Active' | 'Maintenance' | 'Inactive';
-export type ReservationStatus = 'Pending' | 'Confirmed' | 'Cancelled' | 'Completed';
-
 export interface PublicSpace {
-    id: string;
-    name: string;
-    capacity: number;
-    baseHourlyRate: number;
-    openingTime: string;
-    closingTime: string;
-    timeZoneId: string;
-    status: SpaceStatus;
+  id: string;
+  name: string;
+  capacity: number;
+  baseHourlyRate: number;
+  openingTime: string;
+  closingTime: string;
+  timeZoneId: string;
+  status: string;
 }
 
-export interface PricingPreviewRequest {
-    spaceId: string;
-    startTime: string;
-    endTime: string;
+export interface PublicPricingPreviewRequest {
+  spaceId: string;
+  startTime: string;
+  endTime: string;
 }
 
-export interface PricingPreviewResponse {
-    baseAmount: number;
-    finalAmount: number;
-    adjustments: PricingAdjustment[];
+export interface PublicPricingPreviewResponse {
+  baseAmount: number;
+  finalAmount: number;
+  adjustments: PublicPricingAdjustment[];
 }
 
-export interface PricingAdjustment {
-    ruleName: string;
-    percentage: number;
-    amountBefore: number;
-    amountAfter: number;
+export interface PublicPricingAdjustment {
+  name: string;
+  amount: number;
+  description?: string | null;
 }
 
-export interface PublicCreateReservationRequest {
-    spaceId: string;
-    customerFullName: string;
-    customerEmail: string | null;
-    customerPhone: string | null;
-    customerDocumentNumber: string | null;
-    startTime: string;
-    endTime: string;
+export interface CreatePublicReservationRequest {
+  spaceId: string;
+  customerFullName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerDocumentNumber: string | null;
+  startTime: string;
+  endTime: string;
 }
 
 export interface PublicReservationResponse {
-    reservationId: string;
-    reservationCode: string;
-    customerId: string;
-    spaceId: string;
-    startTime: string;
-    endTime: string;
-    status: ReservationStatus;
-    baseAmount: number;
-    finalAmount: number;
-    pricingBreakdown: string;
+  id: string;
+  reservationCode: string;
+  spaceId: string;
+  customerId: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  baseAmount: number;
+  finalAmount: number;
 }
