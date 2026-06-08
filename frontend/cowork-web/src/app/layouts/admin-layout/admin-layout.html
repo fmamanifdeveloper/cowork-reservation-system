@@ -10,11 +10,11 @@
         </div>
 
         <nav class="sidebar-nav">
+            @if (canManageAdministration()) {
             <a routerLink="/admin/dashboard" routerLinkActive="active" (click)="closeSidebar()">
                 Dashboard
             </a>
 
-            @if (canManageAdministration()) {
             <a routerLink="/admin/spaces" routerLinkActive="active" (click)="closeSidebar()">
                 Espacios
             </a>

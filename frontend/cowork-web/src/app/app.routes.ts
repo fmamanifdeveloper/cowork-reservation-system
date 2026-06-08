@@ -57,7 +57,7 @@ export const routes: Routes = [
                 component: DashboardPage,
                 canActivate: [roleGuard],
                 data: {
-                    roles: ['Admin', 'Staff', 'Customer']
+                    roles: ['Admin', 'Staff']
                 }
             },
             {
