@@ -1,11 +1,7 @@
-﻿using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text.Json;
 
 namespace Cowork.IntegrationTests.Reservations;
 
