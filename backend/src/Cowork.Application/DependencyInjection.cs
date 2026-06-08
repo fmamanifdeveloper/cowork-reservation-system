@@ -4,6 +4,7 @@ using Cowork.Application.Common.Interfaces;
 using Cowork.Application.Common.Services;
 using Cowork.Application.Customers;
 using Cowork.Application.Pricing;
+using Cowork.Application.Public;
 using Cowork.Application.Reports;
 using Cowork.Application.Reservations;
 using Cowork.Application.Spaces;
@@ -26,8 +27,8 @@ public static class DependencyInjection
         services.AddScoped<PricingPreviewService>();
         services.AddScoped<ReservationService>();
         services.AddScoped<ReportsService>();
-
         services.AddScoped<AuthService>();
+        services.AddScoped<PublicReservationService>();
 
         return services;
     }

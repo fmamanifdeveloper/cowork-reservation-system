@@ -29,6 +29,16 @@ public sealed class CustomerRepository : ICustomerRepository
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
     }
 
+    public async Task<Customer?> GetByEmailAsync(string email, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Customers
+            .FirstOrDefaultAsync(
+                x => x.Email != null &&
+                     x.Email.ToLower() == email.Trim().ToLower() &&
+                     !x.IsDeleted,
+                cancellationToken);
+    }
+
     public void Add(Customer customer)
     {
         _dbContext.Customers.Add(customer);
