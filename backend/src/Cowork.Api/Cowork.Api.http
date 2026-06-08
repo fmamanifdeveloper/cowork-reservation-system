@@ -1,6 +1,8 @@
-@Cowork.Api_HostAddress = http://localhost:5262
+@host = https://localhost:7011
 
-GET {{Cowork.Api_HostAddress}}/weatherforecast/
+### API health check through OpenAPI
+GET {{host}}/openapi/v1.json
 Accept: application/json
 
-###
+### Main request collection
+### See: ../../docs/requests/requests.http
