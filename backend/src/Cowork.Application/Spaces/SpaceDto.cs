@@ -9,4 +9,5 @@ public sealed record SpaceDto(
     decimal BaseHourlyRate,
     TimeOnly OpeningTime,
     TimeOnly ClosingTime,
+    string TimeZoneId,
     SpaceStatus Status);

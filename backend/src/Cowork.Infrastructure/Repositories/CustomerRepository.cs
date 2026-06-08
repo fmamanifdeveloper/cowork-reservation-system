@@ -5,32 +5,32 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Cowork.Infrastructure.Repositories;
 
-public sealed class SpaceRepository : ISpaceRepository
+public sealed class CustomerRepository : ICustomerRepository
 {
     private readonly CoworkDbContext _dbContext;
 
-    public SpaceRepository(CoworkDbContext dbContext)
+    public CustomerRepository(CoworkDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
-    public async Task<IReadOnlyList<Space>> ListAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Customer>> ListAsync(CancellationToken cancellationToken)
     {
-        return await _dbContext.Spaces
+        return await _dbContext.Customers
             .AsNoTracking()
             .Where(x => !x.IsDeleted)
-            .OrderBy(x => x.Name)
+            .OrderBy(x => x.FullName)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Space?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<Customer?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        return await _dbContext.Spaces
+        return await _dbContext.Customers
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
     }
 
-    public void Add(Space space)
+    public void Add(Customer customer)
     {
-        _dbContext.Spaces.Add(space);
+        _dbContext.Customers.Add(customer);
     }
 }

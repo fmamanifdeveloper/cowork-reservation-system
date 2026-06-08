@@ -46,4 +46,11 @@ public sealed class SpacesController : ControllerBase
         var result = await _spaceService.UpdateAsync(id, request, cancellationToken);
         return Ok(result);
     }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        await _spaceService.DeleteAsync(id, cancellationToken);
+        return NoContent();
+    }
 }

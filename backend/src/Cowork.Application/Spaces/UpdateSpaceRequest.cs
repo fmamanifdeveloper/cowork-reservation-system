@@ -8,4 +8,5 @@ public sealed record UpdateSpaceRequest(
     decimal BaseHourlyRate,
     TimeOnly OpeningTime,
     TimeOnly ClosingTime,
+    string? TimeZoneId,
     SpaceStatus Status);

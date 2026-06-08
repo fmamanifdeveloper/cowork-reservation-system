@@ -32,12 +32,12 @@ public sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 
         builder.Property(x => x.Role)
             .HasColumnName("role_id")
-            .HasConversion<int>()
+            .HasConversion<short>()
             .IsRequired();
 
         builder.Property(x => x.Status)
             .HasColumnName("status_id")
-            .HasConversion<int>()
+            .HasConversion<short>()
             .IsRequired();
 
         builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();

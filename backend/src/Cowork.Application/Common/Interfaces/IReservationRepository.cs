@@ -5,7 +5,6 @@ namespace Cowork.Application.Common.Interfaces;
 public interface IReservationRepository
 {
     Task<IReadOnlyList<Reservation>> ListAsync(CancellationToken cancellationToken);
-
     Task<Reservation?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<Reservation>> ListByRangeAsync(

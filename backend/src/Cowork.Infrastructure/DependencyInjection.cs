@@ -25,6 +25,10 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString);
         });
 
+        services.AddScoped<IAppUserRepository, AppUserRepository>();
+        services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+
         services.AddScoped<ISpaceRepository, SpaceRepository>();
         services.AddScoped<IReservationRepository, ReservationRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();

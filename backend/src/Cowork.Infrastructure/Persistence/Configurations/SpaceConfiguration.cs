@@ -45,7 +45,7 @@ public sealed class SpaceConfiguration : IEntityTypeConfiguration<Space>
 
         builder.Property(x => x.Status)
             .HasColumnName("status_id")
-            .HasConversion<int>()
+            .HasConversion<short>()
             .IsRequired();
 
         builder.Property(x => x.IsDeleted).HasColumnName("is_deleted").IsRequired();
