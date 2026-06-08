@@ -1,4 +1,5 @@
-﻿using Cowork.Application.Auth;
+﻿using Cowork.Application.AuditLogs;
+using Cowork.Application.Auth;
 using Cowork.Application.Cancellations;
 using Cowork.Application.Common.Interfaces;
 using Cowork.Application.Common.Services;
@@ -29,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<ReportsService>();
         services.AddScoped<AuthService>();
         services.AddScoped<PublicReservationService>();
+        services.AddScoped<AuditLogService>();
 
         return services;
     }

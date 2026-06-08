@@ -1,80 +1,146 @@
 ﻿using Cowork.Application.Common.Exceptions;
 using Cowork.Application.Common.Interfaces;
+using Cowork.Domain.Entities;
 using Cowork.Domain.Enums;
 
 namespace Cowork.Application.Reports;
 
 public sealed class ReportsService
 {
-    private readonly ISpaceRepository _spaceRepository;
     private readonly IReservationRepository _reservationRepository;
+    private readonly ISpaceRepository _spaceRepository;
 
     public ReportsService(
-        ISpaceRepository spaceRepository,
-        IReservationRepository reservationRepository)
+        IReservationRepository reservationRepository,
+        ISpaceRepository spaceRepository)
     {
-        _spaceRepository = spaceRepository;
         _reservationRepository = reservationRepository;
+        _spaceRepository = spaceRepository;
     }
 
-    public async Task<ReportsResponse> GetAsync(
-        ReportsRequest request,
+    public async Task<ReportsDashboardDto> GetDashboardAsync(
+        DateTimeOffset? from,
+        DateTimeOffset? to,
         CancellationToken cancellationToken)
     {
-        if (request.From >= request.To)
+        var now = DateTimeOffset.UtcNow;
+
+        var dateTo = to ?? now;
+        var dateFrom = from ?? now.AddDays(-30);
+
+        if (dateFrom >= dateTo)
             throw new BusinessRuleException("Report start date must be earlier than end date.");
+
+        var reservations = await _reservationRepository.ListByRangeAsync(
+            dateFrom,
+            dateTo,
+            cancellationToken);
 
         var spaces = await _spaceRepository.ListAsync(cancellationToken);
 
-        var reservations = await _reservationRepository.ListByRangeAsync(
-            request.From,
-            request.To,
-            cancellationToken);
+        var spacesById = spaces.ToDictionary(x => x.Id);
 
-        var effectiveReservations = reservations
-            .Where(x => x.Status is ReservationStatus.Confirmed or ReservationStatus.Completed)
-            .ToList();
+        var totalReservations = reservations.Count;
+        var pendingReservations = reservations.Count(x => x.Status == ReservationStatus.Pending);
+        var confirmedReservations = reservations.Count(x => x.Status == ReservationStatus.Confirmed);
+        var cancelledReservations = reservations.Count(x => x.Status == ReservationStatus.Cancelled);
+        var completedReservations = reservations.Count(x => x.Status == ReservationStatus.Completed);
 
-        var totalRangeHours = (decimal)(request.To - request.From).TotalHours;
+        var totalRevenue = reservations
+            .Where(x => x.Status != ReservationStatus.Cancelled)
+            .Sum(x => x.FinalAmount);
 
-        var spaceReports = spaces
-            .Select(space =>
+        var totalRefundAmount = reservations
+            .Where(x => x.RefundAmount.HasValue)
+            .Sum(x => x.RefundAmount!.Value);
+
+        var spaceReportItems = reservations
+            .GroupBy(x => x.SpaceId)
+            .Select(group =>
             {
-                var reservationsBySpace = effectiveReservations
-                    .Where(x => x.SpaceId == space.Id)
-                    .ToList();
+                var spaceName = spacesById.TryGetValue(group.Key, out var space)
+                    ? space.Name
+                    : "Unknown space";
 
-                var reservedHours = reservationsBySpace
-                    .Sum(x => (decimal)(x.EndTime - x.StartTime).TotalHours);
-
-                var occupancy = totalRangeHours <= 0
-                    ? 0
-                    : Math.Round((reservedHours / totalRangeHours) * 100, 2, MidpointRounding.AwayFromZero);
-
-                var income = reservationsBySpace
+                var revenue = group
+                    .Where(x => x.Status != ReservationStatus.Cancelled)
                     .Sum(x => x.FinalAmount);
 
-                return new SpaceOccupancyReportDto(
-                    space.Id,
-                    space.Name,
-                    occupancy,
-                    income);
+                return new SpaceReportItemDto(
+                    group.Key,
+                    spaceName,
+                    group.Count(),
+                    revenue);
             })
+            .OrderByDescending(x => x.ReservationCount)
+            .ThenByDescending(x => x.Revenue)
             .ToList();
 
-        var totalIncome = spaceReports.Sum(x => x.Income);
+        var mostReservedSpaceName = spaceReportItems
+            .FirstOrDefault()
+            ?.SpaceName;
 
-        var mostDemandedHour = effectiveReservations
-            .GroupBy(x => x.StartTime.Hour)
-            .OrderByDescending(x => x.Count())
-            .Select(x => $"{x.Key:00}:00")
-            .FirstOrDefault();
+        var hourlyDemand = reservations
+            .Select(reservation => new
+            {
+                Reservation = reservation,
+                LocalHour = GetLocalStartHour(reservation, spacesById)
+            })
+            .GroupBy(x => x.LocalHour)
+            .Select(group => new HourlyDemandDto(
+                group.Key,
+                group.Count()))
+            .OrderBy(x => x.Hour)
+            .ToList();
 
-        return new ReportsResponse(
-            request.From,
-            request.To,
-            totalIncome,
+        var mostDemandedHour = hourlyDemand
+            .OrderByDescending(x => x.ReservationCount)
+            .ThenBy(x => x.Hour)
+            .FirstOrDefault()
+            ?.Hour;
+
+        return new ReportsDashboardDto(
+            dateFrom,
+            dateTo,
+            totalReservations,
+            pendingReservations,
+            confirmedReservations,
+            cancelledReservations,
+            completedReservations,
+            totalRevenue,
+            totalRefundAmount,
+            mostReservedSpaceName,
             mostDemandedHour,
-            spaceReports);
+            spaceReportItems,
+            hourlyDemand);
+    }
+
+    private static int GetLocalStartHour(
+        Reservation reservation,
+        IReadOnlyDictionary<Guid, Space> spacesById)
+    {
+        if (!spacesById.TryGetValue(reservation.SpaceId, out var space))
+            return reservation.StartTime.UtcDateTime.Hour;
+
+        var timeZone = ResolveTimeZone(space.TimeZoneId);
+        var localStart = TimeZoneInfo.ConvertTime(reservation.StartTime, timeZone);
+
+        return localStart.Hour;
+    }
+
+    private static TimeZoneInfo ResolveTimeZone(string timeZoneId)
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        }
+        catch (TimeZoneNotFoundException) when (timeZoneId == "America/Lima")
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
+        }
+        catch (InvalidTimeZoneException) when (timeZoneId == "America/Lima")
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
+        }
     }
 }
