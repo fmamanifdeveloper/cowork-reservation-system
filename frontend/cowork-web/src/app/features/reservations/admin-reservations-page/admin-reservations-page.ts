@@ -22,7 +22,6 @@ export class AdminReservationsPage {
   private readonly customersApi = inject(CustomersApi);
   private readonly publicApi = inject(PublicApi);
   private readonly notificationStore = inject(NotificationStore);
-  private readonly apiErrorTranslator = inject(ApiErrorTranslator);
 
   readonly authStore = inject(AuthStore);
 
@@ -151,7 +150,17 @@ export class AdminReservationsPage {
           this.loadReservations();
         },
         error: error => {
-          this.notificationStore.error(this.apiErrorTranslator.translate(error));
+          if (error.status === 409) {
+            this.notificationStore.error('El espacio ya está reservado en ese horario.');
+            return;
+          }
+
+          if (error.status === 400) {
+            this.notificationStore.error('La reserva no cumple las reglas requeridas.');
+            return;
+          }
+
+          this.notificationStore.error('No se pudo crear la reserva.');
         }
       });
   }
@@ -187,7 +196,12 @@ export class AdminReservationsPage {
           this.loadReservations();
         },
         error: error => {
-          this.notificationStore.error(this.apiErrorTranslator.translate(error));
+          if (error.status === 400) {
+            this.notificationStore.error('No se puede cancelar esta reserva.');
+            return;
+          }
+
+          this.notificationStore.error('No se pudo cancelar la reserva.');
         }
       });
   }
@@ -223,7 +237,12 @@ export class AdminReservationsPage {
           this.loadReservations();
         },
         error: error => {
-          this.notificationStore.error(this.apiErrorTranslator.translate(error));
+          if (error.status === 400) {
+            this.notificationStore.error('No se puede completar esta reserva.');
+            return;
+          }
+
+          this.notificationStore.error('No se pudo completar la reserva.');
         }
       });
   }
@@ -293,6 +312,22 @@ export class AdminReservationsPage {
     return this.wasSubmitted() && !this.form.endTime;
   }
 
+  isStartTimeStepInvalid(): boolean {
+    return (
+      this.wasSubmitted() &&
+      !!this.form.startTime &&
+      !this.hasAllowedTimeStep(this.form.startTime)
+    );
+  }
+
+  isEndTimeStepInvalid(): boolean {
+    return (
+      this.wasSubmitted() &&
+      !!this.form.endTime &&
+      !this.hasAllowedTimeStep(this.form.endTime)
+    );
+  }
+
   isScheduleInvalid(): boolean {
     return (
       this.wasSubmitted() &&
@@ -323,6 +358,14 @@ export class AdminReservationsPage {
       return false;
     }
 
+    if (
+      !this.hasAllowedTimeStep(this.form.startTime) ||
+      !this.hasAllowedTimeStep(this.form.endTime)
+    ) {
+      this.notificationStore.warning('Las reservas deben usar horarios en bloques de 30 minutos.');
+      return false;
+    }
+
     if (new Date(this.form.startTime) >= new Date(this.form.endTime)) {
       this.notificationStore.warning('La hora de inicio debe ser menor que la hora de fin.');
       return false;
@@ -344,6 +387,19 @@ export class AdminReservationsPage {
       startTime: '',
       endTime: ''
     };
+  }
+
+  private hasAllowedTimeStep(value: string): boolean {
+    const timePart = value.split('T')[1];
+
+    if (!timePart) {
+      return false;
+    }
+
+    const minuteText = timePart.split(':')[1];
+    const minutes = Number(minuteText);
+
+    return Number.isInteger(minutes) && minutes % 30 === 0;
   }
 
   private toPeruOffsetDateTime(value: string): string {

@@ -1,6 +1,7 @@
 ﻿using Cowork.Application.Common.Exceptions;
 using Cowork.Application.Common.Interfaces;
 using Cowork.Domain.Entities;
+using Cowork.Domain.Rules;
 
 namespace Cowork.Application.Spaces;
 
@@ -43,17 +44,25 @@ public sealed class SpaceService
         CreateSpaceRequest request,
         CancellationToken cancellationToken)
     {
-        var currentUserId = _currentUserService.UserId;
-
-        var space = new Space(
-            Guid.NewGuid(),
+        ValidateSpaceRequest(
             request.Name,
             request.Capacity,
             request.BaseHourlyRate,
             request.OpeningTime,
             request.ClosingTime,
+            request.TimeZoneId ?? "America/Lima");
+
+        var currentUserId = _currentUserService.UserId;
+
+        var space = new Space(
+            Guid.NewGuid(),
+            request.Name.Trim(),
+            request.Capacity,
+            request.BaseHourlyRate,
+            request.OpeningTime,
+            request.ClosingTime,
             request.Status,
-            request.TimeZoneId ?? "America/Lima",
+            request.TimeZoneId?.Trim() ?? "America/Lima",
             currentUserId);
 
         _spaceRepository.Add(space);
@@ -92,6 +101,14 @@ public sealed class SpaceService
         UpdateSpaceRequest request,
         CancellationToken cancellationToken)
     {
+        ValidateSpaceRequest(
+            request.Name,
+            request.Capacity,
+            request.BaseHourlyRate,
+            request.OpeningTime,
+            request.ClosingTime,
+            request.TimeZoneId ?? "America/Lima");
+
         var currentUserId = _currentUserService.UserId;
 
         var space = await _spaceRepository.GetByIdAsync(id, cancellationToken);
@@ -112,13 +129,13 @@ public sealed class SpaceService
         };
 
         space.Update(
-            request.Name,
+            request.Name.Trim(),
             request.Capacity,
             request.BaseHourlyRate,
             request.OpeningTime,
             request.ClosingTime,
             request.Status,
-            request.TimeZoneId ?? "America/Lima",
+            request.TimeZoneId?.Trim() ?? "America/Lima",
             currentUserId);
 
         await _auditLogger.LogAsync(
@@ -190,6 +207,37 @@ public sealed class SpaceService
             cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void ValidateSpaceRequest(
+        string name,
+        int capacity,
+        decimal baseHourlyRate,
+        TimeOnly openingTime,
+        TimeOnly closingTime,
+        string? timeZoneId)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new BusinessRuleException("Space name is required.");
+
+        if (capacity <= 0)
+            throw new BusinessRuleException("Space capacity must be greater than zero.");
+
+        if (baseHourlyRate <= 0)
+            throw new BusinessRuleException("Base hourly rate must be greater than zero.");
+
+        if (!ScheduleRules.IsThirtyMinuteStep(openingTime) ||
+            !ScheduleRules.IsThirtyMinuteStep(closingTime))
+        {
+            throw new BusinessRuleException(
+                "Space opening and closing times must use 30-minute intervals.");
+        }
+
+        if (openingTime >= closingTime)
+            throw new BusinessRuleException("Opening time must be earlier than closing time.");
+
+        if (string.IsNullOrWhiteSpace(timeZoneId))
+            throw new BusinessRuleException("Time zone is required.");
     }
 
     private static SpaceDto ToDto(Space space)

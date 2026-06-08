@@ -1,267 +1,268 @@
 <section class="admin-page">
-  <div class="page-header">
-    <div>
-      <h1>Reservas</h1>
-      <p>
-        @if (canManageAll()) {
-          Administra reservas de clientes, cancelaciones y finalizaciones.
+    <div class="page-header">
+        <div>
+            <h1>Reservas</h1>
+            <p>
+                @if (canManageAll()) {
+                Administra reservas de clientes, cancelaciones y finalizaciones.
+                } @else {
+                Consulta y cancela tus reservas.
+                }
+            </p>
+        </div>
+
+        <button type="button" class="primary-action" (click)="openCreateModal()">
+            + Nueva reserva
+        </button>
+    </div>
+
+    <div class="panel table-panel">
+        <div class="table-header">
+            <div>
+                <h2>Lista de reservas</h2>
+                <p>{{ reservations().length }} reservas registradas</p>
+            </div>
+
+            <button type="button" class="refresh-button" (click)="loadReservations()">
+                ↻ Actualizar
+            </button>
+        </div>
+
+        @if (isLoading()) {
+        <div class="empty-state">Cargando reservas...</div>
         } @else {
-          Consulta y cancela tus reservas.
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Espacio</th>
+                        <th>Cliente</th>
+                        <th class="text-center">Horario</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center">Total</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (reservation of reservations(); track reservation.id) {
+                    <tr>
+                        <td class="reservation-code">
+                            <strong>{{ reservation.reservationCode }}</strong>
+                        </td>
+
+                        <td>
+                            <strong>{{ getSpaceName(reservation.spaceId) }}</strong>
+                        </td>
+
+                        <td>
+                            {{ getCustomerName(reservation.customerId) }}
+                        </td>
+
+                        <td class="text-center schedule-cell">
+                            <div>
+                                <span>Inicio</span>
+                                <strong>{{ formatDate(reservation.startTime) }}</strong>
+                            </div>
+
+                            <div>
+                                <span>Fin</span>
+                                <strong>{{ formatDate(reservation.endTime) }}</strong>
+                            </div>
+                        </td>
+
+                        <td class="text-center">
+                            <span class="status" [class]="reservation.status">
+                                {{ getStatusLabel(reservation.status) }}
+                            </span>
+                        </td>
+
+                        <td class="text-center amount-cell">
+                            <strong>{{ formatCurrency(reservation.finalAmount) }}</strong>
+
+                            @if (reservation.refundAmount !== null) {
+                            <small>Reembolso: {{ formatCurrency(reservation.refundAmount) }}</small>
+                            }
+                        </td>
+
+                        <td>
+                            <div class="row-actions">
+                                @if (canCancel(reservation)) {
+                                <button type="button" class="danger-soft" (click)="openCancelModal(reservation)">
+                                    Cancelar
+                                </button>
+                                }
+
+                                @if (canComplete(reservation)) {
+                                <button type="button" class="success-soft" (click)="openCompleteModal(reservation)">
+                                    Completar
+                                </button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                        <td colspan="7">No hay reservas registradas.</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
         }
-      </p>
     </div>
-
-    <button type="button" class="primary-action" (click)="openCreateModal()">
-      + Nueva reserva
-    </button>
-  </div>
-
-  <div class="panel table-panel">
-    <div class="table-header">
-      <div>
-        <h2>Lista de reservas</h2>
-        <p>{{ reservations().length }} reservas registradas</p>
-      </div>
-
-      <button type="button" class="refresh-button" (click)="loadReservations()">
-        ↻ Actualizar
-      </button>
-    </div>
-
-    @if (isLoading()) {
-      <div class="empty-state">Cargando reservas...</div>
-    } @else {
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Espacio</th>
-              <th>Cliente</th>
-              <th class="text-center">Horario</th>
-              <th class="text-center">Estado</th>
-              <th class="text-center">Total</th>
-              <th class="text-center">Acciones</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            @for (reservation of reservations(); track reservation.id) {
-              <tr>
-                <td class="reservation-code">
-                  <strong>{{ reservation.reservationCode }}</strong>
-                </td>
-
-                <td>
-                  <strong>{{ getSpaceName(reservation.spaceId) }}</strong>
-                </td>
-
-                <td>
-                  {{ getCustomerName(reservation.customerId) }}
-                </td>
-
-                <td class="text-center schedule-cell">
-                  <div>
-                    <span>Inicio</span>
-                    <strong>{{ formatDate(reservation.startTime) }}</strong>
-                  </div>
-
-                  <div>
-                    <span>Fin</span>
-                    <strong>{{ formatDate(reservation.endTime) }}</strong>
-                  </div>
-                </td>
-
-                <td class="text-center">
-                  <span class="status" [class]="reservation.status">
-                    {{ getStatusLabel(reservation.status) }}
-                  </span>
-                </td>
-
-                <td class="text-center amount-cell">
-                  <strong>{{ formatCurrency(reservation.finalAmount) }}</strong>
-
-                  @if (reservation.refundAmount !== null) {
-                    <small>Reembolso: {{ formatCurrency(reservation.refundAmount) }}</small>
-                  }
-                </td>
-
-                <td>
-                  <div class="row-actions">
-                    @if (canCancel(reservation)) {
-                      <button type="button" class="danger-soft" (click)="openCancelModal(reservation)">
-                        Cancelar
-                      </button>
-                    }
-
-                    @if (canComplete(reservation)) {
-                      <button type="button" class="success-soft" (click)="openCompleteModal(reservation)">
-                        Completar
-                      </button>
-                    }
-                  </div>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="7">No hay reservas registradas.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
-  </div>
 </section>
 
 @if (isFormModalOpen()) {
-  <div class="modal-backdrop">
+<div class="modal-backdrop">
     <form class="modal" (ngSubmit)="createReservation()">
-      <div class="modal-header">
-        <div>
-          <h2>Nueva reserva</h2>
-          <p>Selecciona el espacio, el cliente y el horario de reserva.</p>
+        <div class="modal-header">
+            <div>
+                <h2>Nueva reserva</h2>
+                <p>Selecciona el espacio, el cliente y el horario de reserva.</p>
+            </div>
+
+            <button type="button" (click)="closeFormModal()">
+                ×
+            </button>
         </div>
 
-        <button type="button" (click)="closeFormModal()">
-          ×
-        </button>
-      </div>
+        <div class="modal-body">
+            <label>
+                Espacio
+                <select name="spaceId" [(ngModel)]="form.spaceId">
+                    @for (space of spaces(); track space.id) {
+                    <option [value]="space.id">
+                        {{ space.name }} · S/ {{ space.baseHourlyRate }} por hora
+                    </option>
+                    }
+                </select>
 
-      <div class="modal-body">
-        <label>
-          Espacio
-          <select name="spaceId" [(ngModel)]="form.spaceId">
-            @for (space of spaces(); track space.id) {
-              <option [value]="space.id">
-                {{ space.name }} · S/ {{ space.baseHourlyRate }} por hora
-              </option>
-            }
-          </select>
+                @if (isSpaceInvalid()) {
+                <small class="field-error">Selecciona un espacio.</small>
+                }
+            </label>
 
-          @if (isSpaceInvalid()) {
-            <small class="field-error">Selecciona un espacio.</small>
-          }
-        </label>
+            @if (canManageAll()) {
+            <label>
+                Cliente
+                <select name="customerId" [(ngModel)]="form.customerId">
+                    @for (customer of customers(); track customer.id) {
+                    <option [value]="customer.id">
+                        {{ customer.fullName }}
+                    </option>
+                    }
+                </select>
 
-        @if (canManageAll()) {
-          <label>
-            Cliente
-            <select name="customerId" [(ngModel)]="form.customerId">
-              @for (customer of customers(); track customer.id) {
-                <option [value]="customer.id">
-                  {{ customer.fullName }}
-                </option>
-              }
-            </select>
-
-            @if (isCustomerInvalid()) {
-              <small class="field-error">Selecciona un cliente.</small>
-            }
-          </label>
-        }
-
-        <div class="form-row">
-          <label>
-            Inicio
-            <input
-              type="datetime-local"
-              name="startTime"
-              [(ngModel)]="form.startTime"
-            />
-
-            @if (isStartTimeInvalid()) {
-              <small class="field-error">La fecha de inicio es obligatoria.</small>
-            }
-          </label>
-
-          <label>
-            Fin
-            <input
-              type="datetime-local"
-              name="endTime"
-              [(ngModel)]="form.endTime"
-            />
-
-            @if (isEndTimeInvalid()) {
-              <small class="field-error">La fecha de fin es obligatoria.</small>
+                @if (isCustomerInvalid()) {
+                <small class="field-error">Selecciona un cliente.</small>
+                }
+            </label>
             }
 
-            @if (isScheduleInvalid()) {
-              <small class="field-error">El fin debe ser posterior al inicio.</small>
-            }
-          </label>
+            <div class="form-row">
+                <label>
+                    Inicio
+                    <input type="datetime-local" name="startTime" [(ngModel)]="form.startTime" step="1800" />
+
+                    @if (isStartTimeInvalid()) {
+                    <small class="field-error">La fecha de inicio es obligatoria.</small>
+                    }
+
+                    @if (isStartTimeStepInvalid()) {
+                    <small class="field-error">La hora debe estar en bloques de 30 minutos.</small>
+                    }
+                </label>
+
+                <label>
+                    Fin
+                    <input type="datetime-local" name="endTime" [(ngModel)]="form.endTime" step="1800" />
+
+                    @if (isEndTimeInvalid()) {
+                    <small class="field-error">La fecha de fin es obligatoria.</small>
+                    }
+
+                    @if (isEndTimeStepInvalid()) {
+                    <small class="field-error">La hora debe estar en bloques de 30 minutos.</small>
+                    }
+
+                    @if (isScheduleInvalid()) {
+                    <small class="field-error">El fin debe ser posterior al inicio.</small>
+                    }
+                </label>
+            </div>
         </div>
-      </div>
 
-      <div class="modal-actions">
-        <button type="button" class="secondary" (click)="closeFormModal()">
-          Cancelar
-        </button>
+        <div class="modal-actions">
+            <button type="button" class="secondary" (click)="closeFormModal()">
+                Cancelar
+            </button>
 
-        <button type="submit" class="primary" [disabled]="isSaving()">
-          {{ isSaving() ? 'Guardando...' : 'Crear reserva' }}
-        </button>
-      </div>
+            <button type="submit" class="primary" [disabled]="isSaving()">
+                {{ isSaving() ? 'Guardando...' : 'Crear reserva' }}
+            </button>
+        </div>
     </form>
-  </div>
+</div>
 }
 
 @if (reservationToCancel(); as reservation) {
-  <div class="modal-backdrop">
+<div class="modal-backdrop">
     <div class="confirm-modal">
-      <div class="confirm-icon danger-icon">!</div>
+        <div class="confirm-icon danger-icon">!</div>
 
-      <h2>Cancelar reserva</h2>
+        <h2>Cancelar reserva</h2>
 
-      <p>
-        ¿Seguro que deseas cancelar la reserva
-        <strong>{{ reservation.reservationCode }}</strong>?
-      </p>
+        <p>
+            ¿Seguro que deseas cancelar la reserva
+            <strong>{{ reservation.reservationCode }}</strong>?
+        </p>
 
-      <small>
-        La reserva cambiará a estado cancelado. Si corresponde, se calculará el reembolso según la política definida.
-      </small>
+        <small>
+            La reserva cambiará a estado cancelado. Si corresponde, se calculará el reembolso según la política
+            definida.
+        </small>
 
-      <div class="confirm-actions">
-        <button type="button" class="secondary" (click)="closeCancelModal()">
-          Volver
-        </button>
+        <div class="confirm-actions">
+            <button type="button" class="secondary" (click)="closeCancelModal()">
+                Volver
+            </button>
 
-        <button type="button" class="danger" (click)="confirmCancelReservation()" [disabled]="isCancelling()">
-          {{ isCancelling() ? 'Cancelando...' : 'Sí, cancelar' }}
-        </button>
-      </div>
+            <button type="button" class="danger" (click)="confirmCancelReservation()" [disabled]="isCancelling()">
+                {{ isCancelling() ? 'Cancelando...' : 'Sí, cancelar' }}
+            </button>
+        </div>
     </div>
-  </div>
+</div>
 }
 
 @if (reservationToComplete(); as reservation) {
-  <div class="modal-backdrop">
+<div class="modal-backdrop">
     <div class="confirm-modal">
-      <div class="confirm-icon success-icon">✓</div>
+        <div class="confirm-icon success-icon">✓</div>
 
-      <h2>Completar reserva</h2>
+        <h2>Completar reserva</h2>
 
-      <p>
-        ¿Marcar la reserva
-        <strong>{{ reservation.reservationCode }}</strong>
-        como completada?
-      </p>
+        <p>
+            ¿Marcar la reserva
+            <strong>{{ reservation.reservationCode }}</strong>
+            como completada?
+        </p>
 
-      <small>
-        Usa esta acción cuando el servicio haya finalizado correctamente.
-      </small>
+        <small>
+            Usa esta acción cuando el servicio haya finalizado correctamente.
+        </small>
 
-      <div class="confirm-actions">
-        <button type="button" class="secondary" (click)="closeCompleteModal()">
-          Volver
-        </button>
+        <div class="confirm-actions">
+            <button type="button" class="secondary" (click)="closeCompleteModal()">
+                Volver
+            </button>
 
-        <button type="button" class="success" (click)="confirmCompleteReservation()" [disabled]="isCompleting()">
-          {{ isCompleting() ? 'Completando...' : 'Sí, completar' }}
-        </button>
-      </div>
+            <button type="button" class="success" (click)="confirmCompleteReservation()" [disabled]="isCompleting()">
+                {{ isCompleting() ? 'Completando...' : 'Sí, completar' }}
+            </button>
+        </div>
     </div>
-  </div>
+</div>
 }

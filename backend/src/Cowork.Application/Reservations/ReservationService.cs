@@ -4,6 +4,7 @@ using Cowork.Application.Common.Interfaces;
 using Cowork.Application.Pricing;
 using Cowork.Domain.Entities;
 using Cowork.Domain.Enums;
+using Cowork.Domain.Rules;
 using System.Text.Json;
 
 namespace Cowork.Application.Reservations;
@@ -97,6 +98,9 @@ public sealed class ReservationService
 
             customerId = currentCustomerId.Value;
         }
+
+        if (request.SpaceId == Guid.Empty)
+            throw new BusinessRuleException("Space id is required.");
 
         if (customerId == Guid.Empty)
             throw new BusinessRuleException("Customer id is required.");
@@ -306,6 +310,23 @@ public sealed class ReservationService
         DateTimeOffset startTime,
         DateTimeOffset endTime)
     {
+        if (startTime >= endTime)
+            throw new BusinessRuleException("Reservation start time must be earlier than end time.");
+
+        if (!ScheduleRules.IsThirtyMinuteStep(startTime) ||
+            !ScheduleRules.IsThirtyMinuteStep(endTime))
+        {
+            throw new BusinessRuleException("Reservation times must use 30-minute intervals.");
+        }
+
+        var duration = endTime - startTime;
+
+        if (duration < TimeSpan.FromMinutes(30))
+            throw new BusinessRuleException("Reservation duration must be at least 30 minutes.");
+
+        if (duration > TimeSpan.FromHours(8))
+            throw new BusinessRuleException("Reservation duration must not exceed 8 hours.");
+
         var timeZone = TimeZoneInfo.FindSystemTimeZoneById(space.TimeZoneId);
 
         var localStart = TimeZoneInfo.ConvertTime(startTime, timeZone);
