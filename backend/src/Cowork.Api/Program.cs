@@ -84,14 +84,16 @@ var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+app.MapOpenApi();
+
+app.MapScalarApiReference(options =>
+{
+    options.Title = "Cowork Reservation API";
+});
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-
-    app.MapScalarApiReference(options =>
-    {
-        options.Title = "Cowork Reservation API";
-    });
+    app.UseHttpsRedirection();
 }
 
 app.UseHttpsRedirection();
