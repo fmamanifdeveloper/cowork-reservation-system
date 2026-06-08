@@ -1,0 +1,55 @@
+<section class="login-page">
+    <div class="login-card">
+        <div class="login-brand">
+            <div class="brand-mark">CW</div>
+
+            <div>
+                <h1>CoWork Spaces</h1>
+                <p>Gestión de reservas y espacios compartidos</p>
+            </div>
+        </div>
+
+        <div class="login-content">
+            <h2>Iniciar sesión</h2>
+            <p class="login-description">
+                Accede al panel administrativo o consulta tus reservas como cliente.
+            </p>
+
+            <form (ngSubmit)="login()" #loginForm="ngForm" class="login-form">
+                <label>
+                    Usuario
+                    <input type="text" name="username" [(ngModel)]="username" autocomplete="username" required />
+                </label>
+
+                <label>
+                    Contraseña
+                    <input type="password" name="password" [(ngModel)]="password" autocomplete="current-password"
+                        required />
+                </label>
+
+                <button type="submit" [disabled]="isLoading()">
+                    {{ isLoading() ? 'Ingresando...' : 'Ingresar' }}
+                </button>
+            </form>
+
+            <div class="demo-users">
+                <strong>Usuarios demo</strong>
+
+                <div>
+                    <span>admin</span>
+                    <small>Admin123!</small>
+                </div>
+
+                <div>
+                    <span>staff01</span>
+                    <small>Admin123!</small>
+                </div>
+
+                <div>
+                    <span>juan.perez</span>
+                    <small>Admin123!</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

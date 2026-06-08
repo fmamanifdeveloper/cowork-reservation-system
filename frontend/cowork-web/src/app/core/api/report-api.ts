@@ -1,20 +1,25 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { ReportsResponse } from '@core/models/report';
-import { environment } from '@env/environment';
+import { API_BASE_URL } from './api-config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ReportApi {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/reports`;
+  private readonly baseUrl = `${API_BASE_URL}/reports`;
 
-  get(from: string, to: string) {
-    const params = new HttpParams()
-      .set('from', from)
-      .set('to', to);
+  getDashboard(from?: string, to?: string) {
+    const params: Record<string, string> = {};
 
-    return this.http.get<ReportsResponse>(this.baseUrl, { params });
+    if (from) {
+      params['from'] = from;
+    }
+
+    if (to) {
+      params['to'] = to;
+    }
+
+    return this.http.get(this.baseUrl, { params });
   }
 }

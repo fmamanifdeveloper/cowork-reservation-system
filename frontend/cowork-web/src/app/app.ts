@@ -1,9 +1,11 @@
-import { Component, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { NotificationBanner } from './shared/ui/notification-banner/notification-banner';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  standalone: true,
+  imports: [RouterOutlet, NotificationBanner],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

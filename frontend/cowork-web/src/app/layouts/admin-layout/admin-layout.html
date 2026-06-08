@@ -1,0 +1,43 @@
+<section class="admin-shell" [class.sidebar-open]="isSidebarOpen()">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-mark">CW</div>
+            <div>
+                <strong>CoWork</strong>
+                <span>Admin Panel</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a routerLink="/admin/dashboard" routerLinkActive="active" (click)="closeSidebar()">Dashboard</a>
+            <a routerLink="/admin/spaces" routerLinkActive="active" (click)="closeSidebar()">Espacios</a>
+            <a routerLink="/admin/customers" routerLinkActive="active" (click)="closeSidebar()">Clientes</a>
+            <a routerLink="/admin/reservations" routerLinkActive="active" (click)="closeSidebar()">Reservas</a>
+            <a routerLink="/admin/reports" routerLinkActive="active" (click)="closeSidebar()">Reportes</a>
+            <a routerLink="/admin/audit-logs" routerLinkActive="active" (click)="closeSidebar()">Auditoría</a>
+        </nav>
+    </aside>
+
+    <div class="sidebar-backdrop" (click)="closeSidebar()"></div>
+
+    <main class="admin-main">
+        <header class="topbar">
+            <button type="button" class="menu-button" (click)="toggleSidebar()">
+                ☰
+            </button>
+
+            <div>
+                <strong>{{ authStore.displayName() || 'Usuario' }}</strong>
+                <span>{{ authStore.role() }}</span>
+            </div>
+
+            <button type="button" class="logout-button" (click)="logout()">
+                Cerrar sesión
+            </button>
+        </header>
+
+        <section class="content">
+            <router-outlet />
+        </section>
+    </main>
+</section>

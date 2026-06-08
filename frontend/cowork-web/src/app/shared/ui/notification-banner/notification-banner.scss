@@ -1,0 +1,28 @@
+.notification {
+    position: fixed;
+    right: 1rem;
+    top: 1rem;
+    z-index: 100;
+    max-width: min(420px, calc(100vw - 2rem));
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    color: #ffffff;
+    font-weight: 800;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2);
+}
+
+.success {
+    background: #059669;
+}
+
+.error {
+    background: #dc2626;
+}
+
+.info {
+    background: #2563eb;
+}
+
+.warning {
+    background: #d97706;
+}

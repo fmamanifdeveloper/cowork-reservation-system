@@ -1,0 +1,5 @@
+@if (notificationStore.notification(); as notification) {
+<div class="notification" [class]="notification.type">
+    {{ notification.message }}
+</div>
+}

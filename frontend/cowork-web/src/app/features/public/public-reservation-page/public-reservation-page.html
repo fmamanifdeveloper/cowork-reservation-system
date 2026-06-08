@@ -1,0 +1,111 @@
+<section class="reservation-page">
+    <div class="page-header">
+        <div>
+            <a routerLink="/public/spaces">← Volver a espacios</a>
+            <h1>Crear reserva</h1>
+            <p>Completa tus datos, selecciona el horario y confirma tu reserva.</p>
+        </div>
+    </div>
+
+    <div class="reservation-grid">
+        <form class="reservation-form" (ngSubmit)="createReservation()">
+            <h2>Datos de la reserva</h2>
+
+            <label>
+                Espacio
+                <select name="spaceId" [(ngModel)]="spaceId" (change)="updateSelectedSpace()" required>
+                    @for (space of spaces(); track space.id) {
+                    <option [value]="space.id">
+                        {{ space.name }} - S/ {{ space.baseHourlyRate }} por hora
+                    </option>
+                    }
+                </select>
+            </label>
+
+            <div class="form-row">
+                <label>
+                    Inicio
+                    <input type="datetime-local" name="startTime" [(ngModel)]="startTime" required />
+                </label>
+
+                <label>
+                    Fin
+                    <input type="datetime-local" name="endTime" [(ngModel)]="endTime" required />
+                </label>
+            </div>
+
+            <h2>Datos del cliente</h2>
+
+            <label>
+                Nombre completo
+                <input type="text" name="customerFullName" [(ngModel)]="customerFullName" required />
+            </label>
+
+            <div class="form-row">
+                <label>
+                    Correo
+                    <input type="email" name="customerEmail" [(ngModel)]="customerEmail" />
+                </label>
+
+                <label>
+                    Teléfono
+                    <input type="text" name="customerPhone" [(ngModel)]="customerPhone" />
+                </label>
+            </div>
+
+            <label>
+                Documento
+                <input type="text" name="customerDocumentNumber" [(ngModel)]="customerDocumentNumber" />
+            </label>
+
+            <div class="actions">
+                <button type="button" class="secondary" (click)="previewPrice()" [disabled]="isPreviewLoading()">
+                    {{ isPreviewLoading() ? 'Calculando...' : 'Calcular precio' }}
+                </button>
+
+                <button type="submit" [disabled]="isCreating()">
+                    {{ isCreating() ? 'Reservando...' : 'Confirmar reserva' }}
+                </button>
+            </div>
+        </form>
+
+        <aside class="summary">
+            <h2>Resumen</h2>
+
+            @if (selectedSpace(); as space) {
+            <div class="summary-card">
+                <span>Espacio</span>
+                <strong>{{ space.name }}</strong>
+                <p>{{ space.capacity }} personas · {{ space.openingTime }} - {{ space.closingTime }}</p>
+            </div>
+            }
+
+            @if (pricingPreview(); as preview) {
+            <div class="summary-card price">
+                <span>Precio estimado</span>
+                <strong>S/ {{ preview.finalAmount }}</strong>
+                <p>Base: S/ {{ preview.baseAmount }}</p>
+
+                @if (preview.adjustments.length > 0) {
+                <ul>
+                    @for (adjustment of preview.adjustments; track adjustment.ruleName) {
+                    <li>
+                        {{ adjustment.ruleName }}:
+                        S/ {{ adjustment.amountBefore }} → S/ {{ adjustment.amountAfter }}
+                    </li>
+                    }
+                </ul>
+                }
+            </div>
+            }
+
+            @if (createdReservation(); as reservation) {
+            <div class="success-card">
+                <span>Reserva confirmada</span>
+                <strong>{{ reservation.reservationCode }}</strong>
+                <p>Guarda este código para cualquier consulta.</p>
+            </div>
+            }
+        </aside>
+    </div>
+</section>

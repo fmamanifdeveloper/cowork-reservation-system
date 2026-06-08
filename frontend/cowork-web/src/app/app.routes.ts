@@ -1,28 +1,104 @@
 import { Routes } from '@angular/router';
-import { ReportsDashboard } from '@features/reports/reports-dashboard/reports-dashboard';
-import { ReservationCreate } from '@features/reservations/reservation-create/reservation-create';
-import { SpacesList } from '@features/spaces/spaces-list/spaces-list';
+import { authGuard } from '@core/guards/auth-guard';
+import { roleGuard } from '@core/guards/role-guard';
+import { LoginPage } from '@features/auth/login-page/login-page';
+import { DashboardPage } from './features/dashboard/dashboard-page/dashboard-page';
+import { AdminLayout } from './layouts/admin-layout/admin-layout';
+import { PublicLayout } from './layouts/public-layout/public-layout';
 
 export const routes: Routes = [
     {
         path: '',
-        redirectTo: 'spaces',
+        redirectTo: 'public',
         pathMatch: 'full'
     },
     {
-        path: 'spaces',
-        component: SpacesList
+        path: 'auth/login',
+        component: LoginPage
     },
     {
-        path: 'reservations/create',
-        component: ReservationCreate
+        path: 'public',
+        component: PublicLayout,
+        children: [
+            {
+                path: '',
+                redirectTo: 'spaces',
+                pathMatch: 'full'
+            },
+            {
+                path: 'spaces',
+                loadComponent: () =>
+                    import('./features/public/public-spaces-page/public-spaces-page').then(m => m.PublicSpacesPage)
+            },
+            {
+                path: 'reservation',
+                loadComponent: () =>
+                    import('./features/public/public-reservation-page/public-reservation-page').then(m => m.PublicReservationPage)
+            }
+        ]
     },
     {
-        path: 'reports',
-        component: ReportsDashboard
+        path: 'admin',
+        component: AdminLayout,
+        canActivate: [authGuard],
+        children: [
+            {
+                path: '',
+                redirectTo: 'dashboard',
+                pathMatch: 'full'
+            },
+            {
+                path: 'dashboard',
+                component: DashboardPage,
+                canActivate: [roleGuard],
+                data: {
+                    roles: ['Admin', 'Staff', 'Customer']
+                }
+            },
+            {
+                path: 'spaces',
+                component: DashboardPage,
+                canActivate: [roleGuard],
+                data: {
+                    roles: ['Admin', 'Staff']
+                }
+            },
+            {
+                path: 'customers',
+                component: DashboardPage,
+                canActivate: [roleGuard],
+                data: {
+                    roles: ['Admin', 'Staff']
+                }
+            },
+            {
+                path: 'reservations',
+                component: DashboardPage,
+                canActivate: [roleGuard],
+                data: {
+                    roles: ['Admin', 'Staff', 'Customer']
+                }
+            },
+            {
+                path: 'reports',
+                component: DashboardPage,
+                canActivate: [roleGuard],
+                data: {
+                    roles: ['Admin', 'Staff']
+                }
+            },
+            {
+                path: 'audit-logs',
+                component: DashboardPage,
+                canActivate: [roleGuard],
+                data: {
+                    roles: ['Admin', 'Staff']
+                }
+            }
+        ]
     },
     {
         path: '**',
-        redirectTo: 'spaces'
+        redirectTo: 'public'
     }
 ];

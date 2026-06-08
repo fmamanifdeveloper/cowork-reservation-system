@@ -1,0 +1,143 @@
+.login-page {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+    background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 32rem),
+        linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+.login-card {
+    width: min(980px, 100%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+    border-radius: 28px;
+    background: #ffffff;
+    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.14);
+}
+
+.login-brand {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 3rem;
+    color: #ffffff;
+    background:
+        linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 64, 175, 0.92)),
+        linear-gradient(45deg, #111827, #2563eb);
+
+    h1 {
+        margin: 0;
+        font-size: 2rem;
+    }
+
+    p {
+        margin: 0.75rem 0 0;
+        max-width: 24rem;
+        color: rgba(255, 255, 255, 0.78);
+        line-height: 1.6;
+    }
+}
+
+.brand-mark {
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 18px;
+    background: #ffffff;
+    color: #1d4ed8;
+    font-weight: 900;
+}
+
+.login-content {
+    padding: 3rem;
+}
+
+.login-content h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #111827;
+}
+
+.login-description {
+    margin: 0.75rem 0 2rem;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+.login-form {
+    display: grid;
+    gap: 1rem;
+
+    label {
+        display: grid;
+        gap: 0.45rem;
+        color: #374151;
+        font-weight: 700;
+    }
+
+    input {
+        height: 46px;
+        padding: 0 0.9rem;
+        border: 1px solid #d1d5db;
+        border-radius: 14px;
+        outline: none;
+        font: inherit;
+
+        &:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+    }
+
+    button {
+        height: 48px;
+        margin-top: 0.5rem;
+        border: 0;
+        border-radius: 14px;
+        background: #2563eb;
+        color: #ffffff;
+        font-weight: 800;
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+    }
+}
+
+.demo-users {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border-radius: 16px;
+    background: #f8fafc;
+    color: #374151;
+
+    div {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    small {
+        color: #6b7280;
+    }
+}
+
+@media (max-width: 760px) {
+    .login-card {
+        grid-template-columns: 1fr;
+    }
+
+    .login-brand,
+    .login-content {
+        padding: 2rem;
+    }
+}

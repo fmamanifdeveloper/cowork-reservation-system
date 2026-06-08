@@ -1,0 +1,50 @@
+<section class="public-page">
+    <div class="hero">
+        <div>
+            <span class="eyebrow">CoWork Spaces</span>
+            <h1>Reserva espacios de trabajo de forma rápida</h1>
+            <p>
+                Elige una sala disponible, revisa el horario y calcula el precio antes de confirmar tu reserva.
+            </p>
+        </div>
+
+        <a routerLink="/auth/login" class="admin-link">Acceso interno</a>
+    </div>
+
+    @if (isLoading()) {
+    <div class="state-card">Cargando espacios...</div>
+    } @else {
+    <div class="spaces-grid">
+        @for (space of spaces(); track space.id) {
+        <article class="space-card">
+            <div class="space-card__header">
+                <div>
+                    <h2>{{ space.name }}</h2>
+                    <p>{{ space.capacity }} personas</p>
+                </div>
+
+                <span>{{ space.status }}</span>
+            </div>
+
+            <div class="space-info">
+                <div>
+                    <small>Tarifa por hora</small>
+                    <strong>S/ {{ space.baseHourlyRate }}</strong>
+                </div>
+
+                <div>
+                    <small>Horario</small>
+                    <strong>{{ space.openingTime }} - {{ space.closingTime }}</strong>
+                </div>
+            </div>
+
+            <a [routerLink]="['/public/reservation']" [queryParams]="{ spaceId: space.id }">
+                Reservar este espacio
+            </a>
+        </article>
+        } @empty {
+        <div class="state-card">No hay espacios disponibles por el momento.</div>
+        }
+    </div>
+    }
+</section>

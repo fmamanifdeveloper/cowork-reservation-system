@@ -1,3 +1,4 @@
 export const environment = {
-    apiUrl: 'https://localhost:7011/api'
+    production: true,
+    apiBaseUrl: 'https://api.cowork-spaces.com/api'
 };

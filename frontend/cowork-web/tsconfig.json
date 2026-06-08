@@ -3,7 +3,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-
+    
     "paths": {
       "@core/*": ["./src/app/core/*"],
       "@features/*": ["./src/app/features/*"],
