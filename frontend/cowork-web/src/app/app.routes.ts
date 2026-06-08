@@ -57,7 +57,8 @@ export const routes: Routes = [
             },
             {
                 path: 'spaces',
-                component: DashboardPage,
+                loadComponent: () =>
+                    import('./features/spaces/admin-spaces-page/admin-spaces-page').then(m => m.AdminSpacesPage),
                 canActivate: [roleGuard],
                 data: {
                     roles: ['Admin', 'Staff']
@@ -65,7 +66,8 @@ export const routes: Routes = [
             },
             {
                 path: 'customers',
-                component: DashboardPage,
+                loadComponent: () =>
+                    import('./features/customers/admin-customers-page/admin-customers-page').then(m => m.AdminCustomersPage),
                 canActivate: [roleGuard],
                 data: {
                     roles: ['Admin', 'Staff']

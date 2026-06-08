@@ -1,0 +1,94 @@
+<section class="admin-page">
+    <div class="page-header">
+        <div>
+            <h1>Clientes</h1>
+            <p>Gestiona los datos comerciales de clientes.</p>
+        </div>
+    </div>
+
+    <div class="page-grid">
+        <form class="panel form-panel" (ngSubmit)="save()">
+            <h2>{{ editingId ? 'Editar cliente' : 'Nuevo cliente' }}</h2>
+
+            <label>
+                Nombre completo
+                <input type="text" name="fullName" [(ngModel)]="form.fullName" />
+            </label>
+
+            <label>
+                Correo
+                <input type="email" name="email" [(ngModel)]="form.email" />
+            </label>
+
+            <label>
+                Teléfono
+                <input type="text" name="phone" [(ngModel)]="form.phone" />
+            </label>
+
+            <label>
+                Documento
+                <input type="text" name="documentNumber" [(ngModel)]="form.documentNumber" />
+            </label>
+
+            <div class="actions">
+                @if (editingId) {
+                <button type="button" class="secondary" (click)="cancelEdit()">
+                    Cancelar
+                </button>
+                }
+
+                <button type="submit" [disabled]="isSaving()">
+                    {{ isSaving() ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear' }}
+                </button>
+            </div>
+        </form>
+
+        <div class="panel table-panel">
+            <div class="table-header">
+                <h2>Listado</h2>
+                <button type="button" (click)="loadCustomers()">Actualizar</button>
+            </div>
+
+            @if (isLoading()) {
+            <div class="empty-state">Cargando clientes...</div>
+            } @else {
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Contacto</th>
+                            <th>Documento</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (customer of customers(); track customer.id) {
+                        <tr>
+                            <td>
+                                <strong>{{ customer.fullName }}</strong>
+                                <small>{{ customer.id }}</small>
+                            </td>
+                            <td>
+                                <span>{{ customer.email || 'Sin correo' }}</span>
+                                <small>{{ customer.phone || 'Sin teléfono' }}</small>
+                            </td>
+                            <td>{{ customer.documentNumber || 'Sin documento' }}</td>
+                            <td class="row-actions">
+                                <button type="button" (click)="edit(customer)">Editar</button>
+                                <button type="button" class="danger" (click)="delete(customer)">Eliminar</button>
+                            </td>
+                        </tr>
+                        } @empty {
+                        <tr>
+                            <td colspan="4">No hay clientes registrados.</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            }
+        </div>
+    </div>
+</section>

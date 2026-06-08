@@ -1,0 +1,122 @@
+<section class="admin-page">
+    <div class="page-header">
+        <div>
+            <h1>Espacios</h1>
+            <p>Administra salas y espacios disponibles para reserva.</p>
+        </div>
+    </div>
+
+    <div class="page-grid">
+        <form class="panel form-panel" (ngSubmit)="save()">
+            <h2>{{ editingId ? 'Editar espacio' : 'Nuevo espacio' }}</h2>
+
+            <label>
+                Nombre
+                <input type="text" name="name" [(ngModel)]="form.name" />
+            </label>
+
+            <div class="form-row">
+                <label>
+                    Capacidad
+                    <input type="number" name="capacity" [(ngModel)]="form.capacity" min="1" />
+                </label>
+
+                <label>
+                    Tarifa por hora
+                    <input type="number" name="baseHourlyRate" [(ngModel)]="form.baseHourlyRate" min="1" />
+                </label>
+            </div>
+
+            <div class="form-row">
+                <label>
+                    Apertura
+                    <input type="time" name="openingTime" [(ngModel)]="form.openingTime" />
+                </label>
+
+                <label>
+                    Cierre
+                    <input type="time" name="closingTime" [(ngModel)]="form.closingTime" />
+                </label>
+            </div>
+
+            <label>
+                Zona horaria
+                <input type="text" name="timeZoneId" [(ngModel)]="form.timeZoneId" />
+            </label>
+
+            <label>
+                Estado
+                <select name="status" [(ngModel)]="form.status">
+                    @for (status of statuses; track status) {
+                    <option [value]="status">{{ getStatusLabel(status) }}</option>
+                    }
+                </select>
+            </label>
+
+            <div class="actions">
+                @if (editingId) {
+                <button type="button" class="secondary" (click)="cancelEdit()">
+                    Cancelar
+                </button>
+                }
+
+                <button type="submit" [disabled]="isSaving()">
+                    {{ isSaving() ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear' }}
+                </button>
+            </div>
+        </form>
+
+        <div class="panel table-panel">
+            <div class="table-header">
+                <h2>Listado</h2>
+                <button type="button" (click)="loadSpaces()">Actualizar</button>
+            </div>
+
+            @if (isLoading()) {
+            <div class="empty-state">Cargando espacios...</div>
+            } @else {
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Capacidad</th>
+                            <th>Tarifa</th>
+                            <th>Horario</th>
+                            <th>Estado</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (space of spaces(); track space.id) {
+                        <tr>
+                            <td>
+                                <strong>{{ space.name }}</strong>
+                                <small>{{ space.timeZoneId }}</small>
+                            </td>
+                            <td>{{ space.capacity }}</td>
+                            <td>S/ {{ space.baseHourlyRate }}</td>
+                            <td>{{ space.openingTime }} - {{ space.closingTime }}</td>
+                            <td>
+                                <span class="status" [class]="space.status">
+                                    {{ getStatusLabel(space.status) }}
+                                </span>
+                            </td>
+                            <td class="row-actions">
+                                <button type="button" (click)="edit(space)">Editar</button>
+                                <button type="button" class="danger" (click)="delete(space)">Eliminar</button>
+                            </td>
+                        </tr>
+                        } @empty {
+                        <tr>
+                            <td colspan="6">No hay espacios registrados.</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            }
+        </div>
+    </div>
+</section>
