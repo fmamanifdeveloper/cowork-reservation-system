@@ -4,91 +4,176 @@
             <h1>Clientes</h1>
             <p>Gestiona los datos comerciales de clientes.</p>
         </div>
+
+        <button type="button" class="primary-action" (click)="openCreateModal()">
+            + Nuevo cliente
+        </button>
     </div>
 
-    <div class="page-grid">
-        <form class="panel form-panel" (ngSubmit)="save()">
-            <h2>{{ editingId ? 'Editar cliente' : 'Nuevo cliente' }}</h2>
+    <div class="panel table-panel">
+        <div class="table-header">
+            <div>
+                <h2>Lista de clientes</h2>
+                <p>{{ customers().length }} clientes registrados</p>
+            </div>
 
+            <button type="button" class="refresh-button" (click)="loadCustomers()">
+                ↻ Actualizar
+            </button>
+        </div>
+
+        @if (isLoading()) {
+        <div class="empty-state">Cargando clientes...</div>
+        } @else {
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th class="text-center">Correo</th>
+                        <th class="text-center">Teléfono</th>
+                        <th class="text-center">Documento</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (customer of customers(); track customer.id) {
+                    <tr>
+                        <td>
+                            <strong>{{ customer.fullName }}</strong>
+                            <small>{{ customer.id }}</small>
+                        </td>
+
+                        <td class="text-center">
+                            {{ customer.email || 'Sin correo' }}
+                        </td>
+
+                        <td class="text-center">
+                            {{ customer.phone || 'Sin teléfono' }}
+                        </td>
+
+                        <td class="text-center">
+                            {{ customer.documentNumber || 'Sin documento' }}
+                        </td>
+
+                        <td>
+                            <div class="row-actions">
+                                <button type="button" (click)="openEditModal(customer)">
+                                    Editar
+                                </button>
+
+                                <button type="button" class="danger" (click)="openDeleteModal(customer)">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                        <td colspan="5">No hay clientes registrados.</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+    </div>
+</section>
+
+@if (isFormModalOpen()) {
+<div class="modal-backdrop">
+    <form class="modal" (ngSubmit)="save()">
+        <div class="modal-header">
+            <div>
+                <h2>{{ editingId ? 'Editar cliente' : 'Nuevo cliente' }}</h2>
+                <p>Completa los datos de contacto del cliente.</p>
+            </div>
+
+            <button type="button" (click)="closeFormModal()">
+                ×
+            </button>
+        </div>
+
+        <div class="modal-body">
             <label>
                 Nombre completo
-                <input type="text" name="fullName" [(ngModel)]="form.fullName" />
+                <input type="text" name="fullName" [(ngModel)]="form.fullName" autocomplete="off" />
+
+                @if (isFullNameInvalid()) {
+                <small class="field-error">El nombre completo es obligatorio.</small>
+                }
             </label>
 
             <label>
                 Correo
-                <input type="email" name="email" [(ngModel)]="form.email" />
-            </label>
+                <input type="email" name="email" [(ngModel)]="form.email" autocomplete="off" />
 
-            <label>
-                Teléfono
-                <input type="text" name="phone" [(ngModel)]="form.phone" />
-            </label>
-
-            <label>
-                Documento
-                <input type="text" name="documentNumber" [(ngModel)]="form.documentNumber" />
-            </label>
-
-            <div class="actions">
-                @if (editingId) {
-                <button type="button" class="secondary" (click)="cancelEdit()">
-                    Cancelar
-                </button>
+                @if (isEmailInvalid()) {
+                <small class="field-error">Ingresa un correo válido.</small>
                 }
+            </label>
 
-                <button type="submit" [disabled]="isSaving()">
-                    {{ isSaving() ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear' }}
-                </button>
+            <div class="form-row">
+                <label>
+                    Teléfono
+                    <input type="text" name="phone" [(ngModel)]="form.phone" autocomplete="off" />
+
+                    @if (isPhoneInvalid()) {
+                    <small class="field-error">El teléfono debe tener al menos 6 caracteres.</small>
+                    }
+                </label>
+
+                <label>
+                    Documento
+                    <input type="text" name="documentNumber" [(ngModel)]="form.documentNumber" autocomplete="off" />
+
+                    @if (isDocumentInvalid()) {
+                    <small class="field-error">El documento debe tener al menos 6 caracteres.</small>
+                    }
+                </label>
             </div>
-        </form>
+        </div>
 
-        <div class="panel table-panel">
-            <div class="table-header">
-                <h2>Listado</h2>
-                <button type="button" (click)="loadCustomers()">Actualizar</button>
-            </div>
+        <div class="modal-actions">
+            <button type="button" class="secondary" (click)="closeFormModal()">
+                Cancelar
+            </button>
 
-            @if (isLoading()) {
-            <div class="empty-state">Cargando clientes...</div>
-            } @else {
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Contacto</th>
-                            <th>Documento</th>
-                            <th></th>
-                        </tr>
-                    </thead>
+            <button type="submit" class="primary" [disabled]="isSaving()">
+                {{ isSaving() ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear' }}
+            </button>
+        </div>
+    </form>
+</div>
+}
 
-                    <tbody>
-                        @for (customer of customers(); track customer.id) {
-                        <tr>
-                            <td>
-                                <strong>{{ customer.fullName }}</strong>
-                                <small>{{ customer.id }}</small>
-                            </td>
-                            <td>
-                                <span>{{ customer.email || 'Sin correo' }}</span>
-                                <small>{{ customer.phone || 'Sin teléfono' }}</small>
-                            </td>
-                            <td>{{ customer.documentNumber || 'Sin documento' }}</td>
-                            <td class="row-actions">
-                                <button type="button" (click)="edit(customer)">Editar</button>
-                                <button type="button" class="danger" (click)="delete(customer)">Eliminar</button>
-                            </td>
-                        </tr>
-                        } @empty {
-                        <tr>
-                            <td colspan="4">No hay clientes registrados.</td>
-                        </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-            }
+@if (customerToDelete(); as customer) {
+<div class="modal-backdrop">
+    <div class="confirm-modal">
+        <div class="confirm-icon">!</div>
+
+        <h2>Eliminar cliente</h2>
+
+        <p>
+            ¿Seguro que deseas eliminar a
+            <strong>{{ customer.fullName }}</strong>?
+        </p>
+
+        <small>
+            El cliente dejará de estar disponible para nuevas operaciones. Puedes cancelar esta acción si no estás
+            seguro.
+        </small>
+
+        <div class="confirm-actions">
+            <button type="button" class="secondary" (click)="closeDeleteModal()">
+                Cancelar
+            </button>
+
+            <button type="button" class="danger" (click)="confirmDelete()" [disabled]="isDeleting()">
+                {{ isDeleting() ? 'Eliminando...' : 'Sí, eliminar' }}
+            </button>
         </div>
     </div>
-</section>
+</div>
+}

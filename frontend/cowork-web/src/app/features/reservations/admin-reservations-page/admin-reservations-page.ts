@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CustomersApi } from '@core/api/customers-api';
 import { ReservationsApi } from '@core/api/reservations-api';
 import { AuthStore } from '@core/auth/auth-store';
+import { ApiErrorTranslator } from '@core/errors/api-error-translator';
 import { Customer } from '@core/models/customer';
 import { Reservation, CreateReservationRequest } from '@core/models/reservation';
 import { NotificationStore } from '@core/notifications/notification-store';
@@ -21,6 +22,7 @@ export class AdminReservationsPage {
   private readonly customersApi = inject(CustomersApi);
   private readonly publicApi = inject(PublicApi);
   private readonly notificationStore = inject(NotificationStore);
+  private readonly apiErrorTranslator = inject(ApiErrorTranslator);
 
   readonly authStore = inject(AuthStore);
 
@@ -30,6 +32,13 @@ export class AdminReservationsPage {
 
   readonly isLoading = signal(false);
   readonly isSaving = signal(false);
+  readonly isCancelling = signal(false);
+  readonly isCompleting = signal(false);
+
+  readonly isFormModalOpen = signal(false);
+  readonly reservationToCancel = signal<Reservation | null>(null);
+  readonly reservationToComplete = signal<Reservation | null>(null);
+  readonly wasSubmitted = signal(false);
 
   readonly canManageAll = computed(() =>
     this.authStore.hasAnyRole(['Admin', 'Staff'])
@@ -88,7 +97,35 @@ export class AdminReservationsPage {
     });
   }
 
+  openCreateModal(): void {
+    this.form = this.createEmptyForm();
+
+    const firstSpace = this.spaces()[0];
+    const firstCustomer = this.customers()[0];
+
+    if (firstSpace) {
+      this.form.spaceId = firstSpace.id;
+    }
+
+    if (this.canManageAll() && firstCustomer) {
+      this.form.customerId = firstCustomer.id;
+    }
+
+    this.wasSubmitted.set(false);
+    this.isFormModalOpen.set(true);
+  }
+
+  closeFormModal(): void {
+    if (this.isSaving()) {
+      return;
+    }
+
+    this.resetFormModal();
+  }
+
   createReservation(): void {
+    this.wasSubmitted.set(true);
+
     if (!this.validateForm()) {
       return;
     }
@@ -99,7 +136,7 @@ export class AdminReservationsPage {
       spaceId: this.form.spaceId,
       customerId: this.canManageAll()
         ? this.form.customerId
-        : this.authStore.customerId() ?? this.form.customerId,
+        : this.authStore.customerId() ?? '',
       startTime: this.toPeruOffsetDateTime(this.form.startTime),
       endTime: this.toPeruOffsetDateTime(this.form.endTime)
     };
@@ -110,59 +147,85 @@ export class AdminReservationsPage {
       .subscribe({
         next: () => {
           this.notificationStore.success('Reserva creada correctamente.');
-          this.form = this.createEmptyForm();
-          this.loadInitialData();
+          this.resetFormModal();
+          this.loadReservations();
         },
         error: error => {
-          if (error.status === 409) {
-            this.notificationStore.error('El espacio ya está reservado en ese horario.');
-            return;
-          }
-
-          if (error.status === 400) {
-            this.notificationStore.error(error.error?.message ?? 'La reserva no cumple las reglas requeridas.');
-            return;
-          }
-
-          this.notificationStore.error('No se pudo crear la reserva.');
+          this.notificationStore.error(this.apiErrorTranslator.translate(error));
         }
       });
   }
 
-  cancelReservation(reservation: Reservation): void {
-    const confirmed = window.confirm(
-      `¿Cancelar la reserva ${reservation.reservationCode}?`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.reservationsApi.cancel(reservation.id).subscribe({
-      next: () => {
-        this.notificationStore.success('Reserva cancelada correctamente.');
-        this.loadReservations();
-      },
-      error: () => this.notificationStore.error('No se pudo cancelar la reserva.')
-    });
+  openCancelModal(reservation: Reservation): void {
+    this.reservationToCancel.set(reservation);
   }
 
-  completeReservation(reservation: Reservation): void {
-    const confirmed = window.confirm(
-      `¿Completar la reserva ${reservation.reservationCode}?`
-    );
-
-    if (!confirmed) {
+  closeCancelModal(): void {
+    if (this.isCancelling()) {
       return;
     }
 
-    this.reservationsApi.complete(reservation.id).subscribe({
-      next: () => {
-        this.notificationStore.success('Reserva completada correctamente.');
-        this.loadReservations();
-      },
-      error: () => this.notificationStore.error('No se pudo completar la reserva.')
-    });
+    this.reservationToCancel.set(null);
+  }
+
+  confirmCancelReservation(): void {
+    const reservation = this.reservationToCancel();
+
+    if (!reservation) {
+      return;
+    }
+
+    this.isCancelling.set(true);
+
+    this.reservationsApi
+      .cancel(reservation.id)
+      .pipe(finalize(() => this.isCancelling.set(false)))
+      .subscribe({
+        next: () => {
+          this.notificationStore.success('Reserva cancelada correctamente.');
+          this.reservationToCancel.set(null);
+          this.loadReservations();
+        },
+        error: error => {
+          this.notificationStore.error(this.apiErrorTranslator.translate(error));
+        }
+      });
+  }
+
+  openCompleteModal(reservation: Reservation): void {
+    this.reservationToComplete.set(reservation);
+  }
+
+  closeCompleteModal(): void {
+    if (this.isCompleting()) {
+      return;
+    }
+
+    this.reservationToComplete.set(null);
+  }
+
+  confirmCompleteReservation(): void {
+    const reservation = this.reservationToComplete();
+
+    if (!reservation) {
+      return;
+    }
+
+    this.isCompleting.set(true);
+
+    this.reservationsApi
+      .complete(reservation.id)
+      .pipe(finalize(() => this.isCompleting.set(false)))
+      .subscribe({
+        next: () => {
+          this.notificationStore.success('Reserva completada correctamente.');
+          this.reservationToComplete.set(null);
+          this.loadReservations();
+        },
+        error: error => {
+          this.notificationStore.error(this.apiErrorTranslator.translate(error));
+        }
+      });
   }
 
   canCancel(reservation: Reservation): boolean {
@@ -170,7 +233,11 @@ export class AdminReservationsPage {
   }
 
   canComplete(reservation: Reservation): boolean {
-    return this.canManageAll() && reservation.status !== 'Cancelled' && reservation.status !== 'Completed';
+    return (
+      this.canManageAll() &&
+      reservation.status !== 'Cancelled' &&
+      reservation.status !== 'Completed'
+    );
   }
 
   getStatusLabel(status: ReservationStatus): string {
@@ -203,6 +270,38 @@ export class AdminReservationsPage {
     }).format(new Date(value));
   }
 
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('es-PE', {
+      style: 'currency',
+      currency: 'PEN'
+    }).format(value);
+  }
+
+  isSpaceInvalid(): boolean {
+    return this.wasSubmitted() && !this.form.spaceId;
+  }
+
+  isCustomerInvalid(): boolean {
+    return this.wasSubmitted() && this.canManageAll() && !this.form.customerId;
+  }
+
+  isStartTimeInvalid(): boolean {
+    return this.wasSubmitted() && !this.form.startTime;
+  }
+
+  isEndTimeInvalid(): boolean {
+    return this.wasSubmitted() && !this.form.endTime;
+  }
+
+  isScheduleInvalid(): boolean {
+    return (
+      this.wasSubmitted() &&
+      !!this.form.startTime &&
+      !!this.form.endTime &&
+      new Date(this.form.startTime) >= new Date(this.form.endTime)
+    );
+  }
+
   private validateForm(): boolean {
     if (!this.form.spaceId) {
       this.notificationStore.warning('Selecciona un espacio.');
@@ -211,6 +310,11 @@ export class AdminReservationsPage {
 
     if (this.canManageAll() && !this.form.customerId) {
       this.notificationStore.warning('Selecciona un cliente.');
+      return false;
+    }
+
+    if (!this.canManageAll() && !this.authStore.customerId()) {
+      this.notificationStore.warning('Tu usuario no tiene un cliente asociado.');
       return false;
     }
 
@@ -225,6 +329,12 @@ export class AdminReservationsPage {
     }
 
     return true;
+  }
+
+  private resetFormModal(): void {
+    this.isFormModalOpen.set(false);
+    this.wasSubmitted.set(false);
+    this.form = this.createEmptyForm();
   }
 
   private createEmptyForm(): CreateReservationRequest {

@@ -14,13 +14,19 @@ export class AdminLayout {
   readonly authStore: AuthStore = inject(AuthStore);
 
   readonly isSidebarOpen = signal(false);
+  readonly isSidebarCollapsed = signal(false);
 
   readonly canManageAdministration = computed(() =>
     this.authStore.hasAnyRole(['Admin', 'Staff'])
   );
 
   toggleSidebar(): void {
-    this.isSidebarOpen.update(value => !value);
+    if (window.innerWidth <= 900) {
+      this.isSidebarOpen.update(value => !value);
+      return;
+    }
+
+    this.isSidebarCollapsed.update(value => !value);
   }
 
   closeSidebar(): void {
