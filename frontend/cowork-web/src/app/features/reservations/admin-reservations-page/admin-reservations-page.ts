@@ -7,7 +7,11 @@ import { Customer } from '@core/models/customer';
 import { Reservation, CreateReservationRequest, ReservationStatus } from '@core/models/reservation';
 import { NotificationStore } from '@core/notifications/notification-store';
 import { PublicApi } from '@features/public/public-api';
-import { PublicPricingPreviewResponse, PublicSpace } from '@features/public/public-models';
+import {
+  PublicPricingAdjustment,
+  PublicPricingPreviewResponse,
+  PublicSpace
+} from '@features/public/public-models';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -248,6 +252,28 @@ export class AdminReservationsPage {
     }
 
     this.reservationToComplete.set(null);
+  }
+
+  getPricingAdjustmentLabel(adjustment: PublicPricingAdjustment): string {
+    const labels: Record<string, string> = {
+      PeakHour: 'Recargo por hora pico',
+      Weekend: 'Recargo por fin de semana',
+      LongReservation: 'Descuento por reserva larga',
+      AdvanceBooking: 'Descuento por reserva anticipada'
+    };
+
+    return labels[adjustment.rule] ?? adjustment.rule;
+  }
+
+  getPricingAdjustmentAmount(adjustment: PublicPricingAdjustment): number {
+    return adjustment.amountAfter - adjustment.amountBefore;
+  }
+
+  getPricingAdjustmentPercentageLabel(adjustment: PublicPricingAdjustment): string {
+    const percentage = adjustment.percentage * 100;
+    const sign = percentage > 0 ? '+' : '';
+
+    return `${sign}${percentage}%`;
   }
 
   confirmCompleteReservation(): void {

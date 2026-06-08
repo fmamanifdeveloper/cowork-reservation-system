@@ -243,10 +243,16 @@
                         <strong>{{ formatCurrency(preview.baseAmount) }}</strong>
                     </div>
 
-                    @for (adjustment of preview.adjustments; track adjustment.name) {
+                    @for (adjustment of preview.adjustments; track adjustment.rule) {
                     <div>
-                        <span>{{ adjustment.name }}</span>
-                        <strong>{{ formatCurrency(adjustment.amount) }}</strong>
+                        <span>
+                            {{ getPricingAdjustmentLabel(adjustment) }}
+                            {{ getPricingAdjustmentPercentageLabel(adjustment) }}
+                        </span>
+
+                        <strong>
+                            {{ formatCurrency(getPricingAdjustmentAmount(adjustment)) }}
+                        </strong>
                     </div>
                     }
 
